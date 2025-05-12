@@ -31,8 +31,10 @@ import os, yaml, rtde_receive, rtde_control
 
 _pkg_dir = os.path.dirname(__file__)
 _cfg_path = os.path.abspath(os.path.join(_pkg_dir, '..', 'config', 'config.yml'))
+
 with open(_cfg_path) as f:
     _cfg = yaml.safe_load(f)
+
 ROBOT_ID = _cfg['UR5E']['ROBOT_ID']
 
 _rtde_recv = None

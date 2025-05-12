@@ -39,14 +39,13 @@ rtde_recv_iface = get_receive_interface()
 with open("../config/config.yml", "r") as f:
     cfg = yaml.safe_load(f)
 
-# You can put these two keys in your config.yml instead of hard-coding here:
-OUTPUT_DIR = cfg.get("logging", {}).get("output_dir", "../data/logs")
-CSV_NAME   = cfg.get("logging", {}).get("filename",   "ur5e_data_test.csv")  # TODO
-LOG_RATE_HZ = cfg.get("logging", {}).get("rate_hz",    50.0)
+LOG_RATE_HZ = cfg['UR5E']['LOG_RATE_HZ']
 
-os.makedirs(OUTPUT_DIR, exist_ok=True)
+csv_file_name = "ur5e_data_test.csv"  # TODO
+csv_dir = '../data/logs/'
+os.makedirs(csv_dir, exist_ok=True)
 
-csv_path = os.path.join(OUTPUT_DIR, CSV_NAME)
+csv_path = os.path.join(csv_dir, csv_file_name)
 
 period = 1.0 / LOG_RATE_HZ
 with open(csv_path, "w", newline="") as csvf:
@@ -84,7 +83,9 @@ with open(csv_path, "w", newline="") as csvf:
             # sleep to enforce rate
             dt = time.time() - loop_start
             to_sleep = period - dt
+
             if to_sleep > 0:
                 time.sleep(to_sleep)
+
     except KeyboardInterrupt:
         print("Logging stopped by user.")

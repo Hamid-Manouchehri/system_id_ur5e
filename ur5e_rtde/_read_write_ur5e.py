@@ -33,20 +33,9 @@ import rtde_control
 import rtde_receive
 import yaml
 from ur5e_rtde import get_receive_interface, get_control_interface
-import ur5e_rtde._read_write_ur5e as ur5e
 
 rtde_recv_iface = get_receive_interface()
 rtde_ctrl_iface = get_control_interface()
-
-# with open("../config/config.yml", 'r') as file:
-#     config = yaml.safe_load(file)
-
-# ROBOT_ID = config["UR5E"]["ROBOT_ID"]
-
-
-# Initialize RTDE interfaces
-# rtde_receive_interface = rtde_receive.RTDEReceiveInterface(ROBOT_ID)
-# rtde_control_interface = rtde_control.RTDEControlInterface(ROBOT_ID)
 
 
 def ur5e_moveJ(joint_goal, speed=0.1, accel=0.5):
