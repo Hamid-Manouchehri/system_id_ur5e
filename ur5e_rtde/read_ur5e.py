@@ -33,7 +33,7 @@ with the software or the use or other dealings in the software.
 import os, csv, time, yaml
 from ur5e_rtde import get_receive_interface
 
-recv_iface = get_receive_interface()
+rtde_recv_iface = get_receive_interface()
 
 
 with open("../config/config.yml", "r") as f:
@@ -64,12 +64,12 @@ with open(csv_path, "w", newline="") as csvf:
         while True:
             loop_start = time.time()
             # read your data:
-            qs  = recv_iface.getActualQ()  # [q₁,…,q₆] in rad
-            qds = recv_iface.getActualQd()  # [q̇₁,…,q̇₆] in rad/s
-            tcpPose = recv_iface.getActualTCPPose()  # [x,y,z, Rx, Ry, Rz]
-            tcpSpeed = recv_iface.getActualTCPSpeed()  # [vx, vy, vz, ωx, ωy, ωz]
-            qCurrent = recv_iface.getActualCurrent()  # [I1, I2, …, I6] in mA
-            tcpForce = recv_iface.getActualTCPForce()  # [Fx, Fy, Fz, Tx, Ty, Tz]
+            qs  = rtde_recv_iface.getActualQ()  # [q₁,…,q₆] in rad
+            qds = rtde_recv_iface.getActualQd()  # [q̇₁,…,q̇₆] in rad/s
+            tcpPose = rtde_recv_iface.getActualTCPPose()  # [x,y,z, Rx, Ry, Rz]
+            tcpSpeed = rtde_recv_iface.getActualTCPSpeed()  # [vx, vy, vz, ωx, ωy, ωz]
+            qCurrent = rtde_recv_iface.getActualCurrent()  # [I1, I2, …, I6] in mA
+            tcpForce = rtde_recv_iface.getActualTCPForce()  # [Fx, Fy, Fz, Tx, Ty, Tz]
             ts  = time.time() - t0
 
             # write it out:

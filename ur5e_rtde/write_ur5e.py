@@ -30,32 +30,33 @@ with the software or the use or other dealings in the software.
 #!/usr/bin/env python3
 
 import numpy as np
-import os, csv, time, yaml
+import os, csv, time, yaml, argparse
 from ur5e_rtde import get_receive_interface, get_control_interface
+from ur5e_rtde._read_write_ur5e import ur5e_homming, setup_configuration
 
-recv_iface = get_receive_interface()
-ctrl_iface = get_control_interface()  
-
-def ur5e_homming(speed=0.1, accel=0.5):
-    """ UR5e upright."""
-    joint_home_position = np.array([0.0, -1.57, 0.0, -1.57, 0.0, 0.0])  # Rad
-    ctrl_iface.moveJ(joint_home_position, speed=speed, acceleration=accel)
-
-
-def setup_configuration(speed=0.1, accel=0.5):
-    # joint_setup_position = np.array([1.48174, -1.23385, 1.96952, -0.70358, 2.62826, -3.11278])  # Rad Graspio_1
-    joint_setup_position = np.array([1.40706, -1.31536, 1.61768, -1.85297, 4.708, -3.28425])  # Rad Graspio_1
-    ctrl_iface.moveJ(joint_setup_position, speed=speed)
-
+rtde_recv_iface = get_receive_interface()
+rtde_ctrl_iface = get_control_interface()  
 
 if __name__ == "__main__":
 
+    parser = argparse.ArgumentParser(description="Script to call different functions based on arguments.")
+    parser.add_argument(
+        "action",
+        nargs="?",
+        choices=["home", "setup_config"],
+        default="home",
+        help="Specify the action to perform: 'home' or 'setup_config' (defaults to 'home')."
+    )
+    args = parser.parse_args()
+
     try:
-        
-        ur5e_homming(speed=0.5, accel=0.5)
-        exit()
-        setup_configuration(speed=0.5, accel=0.5)
-        exit()
+            
+        if args.action == "home":
+            ur5e_homming(speed=0.5, accel=0.5)
+
+        elif args.action == "setup_config":
+            setup_configuration(speed=0.5, accel=0.5)
+
 
         print("Robot stopped.")
 
@@ -64,4 +65,4 @@ if __name__ == "__main__":
 
     finally:
         # Ensure the connection is closed
-        ctrl_iface.disconnect()
+        rtde_ctrl_iface.disconnect()

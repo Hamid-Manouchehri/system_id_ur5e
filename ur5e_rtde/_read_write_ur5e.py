@@ -32,9 +32,11 @@ import numpy as np
 import rtde_control
 import rtde_receive
 import yaml
-from ur5e_rtde import rtde_receive_interface, rtde_control_interface
+from ur5e_rtde import get_receive_interface, get_control_interface
 import ur5e_rtde._read_write_ur5e as ur5e
 
+rtde_recv_iface = get_receive_interface()
+rtde_ctrl_iface = get_control_interface()
 
 # with open("../config/config.yml", 'r') as file:
 #     config = yaml.safe_load(file)
@@ -48,7 +50,7 @@ import ur5e_rtde._read_write_ur5e as ur5e
 
 
 def ur5e_moveJ(joint_goal, speed=0.1, accel=0.5):
-    rtde_control_interface.moveJ(np.array(joint_goal), speed=speed, acceleration=accel)
+    rtde_ctrl_iface.moveJ(np.array(joint_goal), speed=speed, acceleration=accel)
 
 
 # def ur5e_moveL():
@@ -58,10 +60,10 @@ def ur5e_moveJ(joint_goal, speed=0.1, accel=0.5):
 def ur5e_homming(speed=0.1, accel=0.5):
     """ UR5e upright."""
     joint_home_position = np.array([0.0, -1.57, 0.0, -1.57, 0.0, 0.0])  # Rad
-    rtde_control_interface.moveJ(joint_home_position, speed=speed, acceleration=accel)
+    rtde_ctrl_iface.moveJ(joint_home_position, speed=speed, acceleration=accel)
 
 
 def setup_configuration(speed=0.1, accel=0.5):
     # joint_setup_position = np.array([1.48174, -1.23385, 1.96952, -0.70358, 2.62826, -3.11278])  # Rad Graspio_1
     joint_setup_position = np.array([1.40706, -1.31536, 1.61768, -1.85297, 4.708, -3.28425])  # Rad Graspio_1
-    rtde_control_interface.moveJ(joint_setup_position, speed=speed)
+    rtde_ctrl_iface.moveJ(joint_setup_position, speed=speed)
