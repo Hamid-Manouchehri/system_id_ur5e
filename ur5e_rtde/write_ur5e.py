@@ -2,13 +2,13 @@
 *******************************************************************************
 
 Project: system-id ur5e
-File: _read_write_ur5e.py
+File: write_ur5e.py
 Author: Hamid Manouchehri
 Email: hmanouch@buffalo.edu
-Date: May 8, 2025
+Date: May 11, 2025
 
 Description:
-Python module using RTDE protocol for reading and writing commands of UR5e.
+Python script using RTDE protocol for writing command on UR5e.
 
 License:
 This script is licensed under the MIT License.
@@ -27,41 +27,41 @@ with the software or the use or other dealings in the software.
 
 *******************************************************************************
 """
+#!/usr/bin/env python3
 
 import numpy as np
-import rtde_control
-import rtde_receive
-import yaml
-from ur5e_rtde import rtde_receive_interface, rtde_control_interface
-import ur5e_rtde._read_write_ur5e as ur5e
+import os, csv, time, yaml
+from ur5e_rtde import get_receive_interface, get_control_interface
 
-
-# with open("../config/config.yml", 'r') as file:
-#     config = yaml.safe_load(file)
-
-# ROBOT_ID = config["UR5E"]["ROBOT_ID"]
-
-
-# Initialize RTDE interfaces
-# rtde_receive_interface = rtde_receive.RTDEReceiveInterface(ROBOT_ID)
-# rtde_control_interface = rtde_control.RTDEControlInterface(ROBOT_ID)
-
-
-def ur5e_moveJ(joint_goal, speed=0.1, accel=0.5):
-    rtde_control_interface.moveJ(np.array(joint_goal), speed=speed, acceleration=accel)
-
-
-# def ur5e_moveL():
-#     tcp_position = np.array([-0.12433, -0.67481, 0.17184, -0.89113, 1.6404, -1.65547])  # m and Rad
-#     rtde_control_interface.moveL(tcp_position, speed=speed, acceleration=accel, asynchronous=False)
+recv_iface = get_receive_interface()
+ctrl_iface = get_control_interface()  
 
 def ur5e_homming(speed=0.1, accel=0.5):
     """ UR5e upright."""
     joint_home_position = np.array([0.0, -1.57, 0.0, -1.57, 0.0, 0.0])  # Rad
-    rtde_control_interface.moveJ(joint_home_position, speed=speed, acceleration=accel)
+    ctrl_iface.moveJ(joint_home_position, speed=speed, acceleration=accel)
 
 
 def setup_configuration(speed=0.1, accel=0.5):
     # joint_setup_position = np.array([1.48174, -1.23385, 1.96952, -0.70358, 2.62826, -3.11278])  # Rad Graspio_1
     joint_setup_position = np.array([1.40706, -1.31536, 1.61768, -1.85297, 4.708, -3.28425])  # Rad Graspio_1
-    rtde_control_interface.moveJ(joint_setup_position, speed=speed)
+    ctrl_iface.moveJ(joint_setup_position, speed=speed)
+
+
+if __name__ == "__main__":
+
+    try:
+        
+        ur5e_homming(speed=0.5, accel=0.5)
+        exit()
+        setup_configuration(speed=0.5, accel=0.5)
+        exit()
+
+        print("Robot stopped.")
+
+    except Exception as e:
+        print(f"An error occurred: {e}")
+
+    finally:
+        # Ensure the connection is closed
+        ctrl_iface.disconnect()
