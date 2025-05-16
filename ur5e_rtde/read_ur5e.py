@@ -55,20 +55,25 @@ with open(csv_path, "w", newline="") as csvf:
                      "qd1", "qd2", "qd3", "qd4", "qd5", "qd6",
                      "x", "y", "z", "R_x", "R_y", "R_z",
                      "V_x", "V_y", "V_z", "omega_x", "omega_y", "omega_z",
-                     "I1", "I2", "I3", "I4", "I5", "I6",
-                     "F_x", "F_y", "F_z", "T_x", "T_y", "T_z"])
+                     "actualI1", "actualI2", "actualI3", "actualI4", "actualI5", "actualI6",
+                     "outputI1", "outputI2", "outputI3", "outputI4", "outputI5", "outputI6",
+                     "F_x", "F_y", "F_z", "T_x", "T_y", "T_z",
+                     "tau1", "tau2", "tau3", "tau4", "tau5", "tau6"])
     t0 = time.time()
 
     try:
         while True:
             loop_start = time.time()
-            # read your data:
-            qs  = rtde_recv_iface.getActualQ()  # [q₁,…,q₆] in rad
-            qds = rtde_recv_iface.getActualQd()  # [q̇₁,…,q̇₆] in rad/s
-            tcpPose = rtde_recv_iface.getActualTCPPose()  # [x,y,z, Rx, Ry, Rz]
-            tcpSpeed = rtde_recv_iface.getActualTCPSpeed()  # [vx, vy, vz, ωx, ωy, ωz]
-            qCurrent = rtde_recv_iface.getActualCurrent()  # [I1, I2, …, I6] in mA
-            tcpForce = rtde_recv_iface.getActualTCPForce()  # [Fx, Fy, Fz, Tx, Ty, Tz]
+            
+            qs  = rtde_recv_iface.getActualQ()  # actual_q, [q₁,…,q₆] in rad
+            qds = rtde_recv_iface.getActualQd()  # actual_qd, [q̇₁,…,q̇₆] in rad/s
+            tcpPose = rtde_recv_iface.getActualTCPPose()  # actual_TCP_pose, [x,y,z, Rx, Ry, Rz]
+            tcpSpeed = rtde_recv_iface.getActualTCPSpeed()  # actual_TCP_speed, [vx, vy, vz, ωx, ωy, ωz]
+            qCurrent = rtde_recv_iface.getActualCurrent()  # actual_current, [I1, I2, …, I6] in mA
+            qControlCurrent = rtde_recv_iface.getJointControlOutput()  # joint_control_output, [I1, I2, …, I6] in mA
+            tcpForce = rtde_recv_iface.getActualTCPForce()  # actual_TCP_force, [Fx, Fy, Fz, Tx, Ty, Tz]
+            targetMoment = rtde_recv_iface.getTargetMoment()  # target_moment, [T1, T2, T3, T4, T5, T6] in Nm
+
             ts  = time.time() - t0
 
             # write it out:
@@ -77,7 +82,9 @@ with open(csv_path, "w", newline="") as csvf:
                             [f"{v:.4f}" for v in tcpPose] +
                             [f"{v:.4f}" for v in tcpSpeed] +
                             [f"{v:.4f}" for v in qCurrent] +
-                            [f"{v:.4f}" for v in tcpForce])
+                            [f"{v:.4f}" for v in qControlCurrent] +
+                            [f"{v:.4f}" for v in tcpForce] + 
+                            [f"{v:.4f}" for v in targetMoment])
             csvf.flush()
 
             # sleep to enforce rate

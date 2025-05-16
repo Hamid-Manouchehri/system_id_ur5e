@@ -55,14 +55,14 @@ targetMoment  = data(:,44:end);
 
 
 
-plotJointPositions(time, qs);
-plotJointVelocities(time, qds);
-plotTCPPose(time, tcpPose);
-plotTCPSpeed(time, tcpSpeed);
+% plotJointPositions(time, qs);
+% plotJointVelocities(time, qds);
+% plotTCPPose(time, tcpPose);
+% plotTCPSpeed(time, tcpSpeed);
 plotJointActualCurrents(time, qActualCurrent);
-plotJointOutputCurrents(time, qOutputCurrent)
-plotTCPForces(time, tcpForce);
-plotTargetMoment(time, targetMoment);
+% plotJointOutputCurrents(time, qOutputCurrent)
+% plotTCPForces(time, tcpForce);
+% plotTargetMoment(time, targetMoment);
 
 
 
@@ -87,7 +87,7 @@ function plotJointPositions(time, qs)
     legend(arrayfun(@(k) sprintf('q_%d',k), 1:6, 'Uni',false),...
            'Location','best');
     grid on;
-    title('actual\_q','FontSize',14);
+    title('Joint Positions','FontSize',14);
 end
 
 
@@ -104,7 +104,7 @@ function plotJointVelocities(time, qds)
     legend(arrayfun(@(k) sprintf('q̇_%d',k), 1:6, 'Uni',false),...
            'Location','best');
     grid on;
-    title('actual\_qd','FontSize',14);
+    title('Joint Velocities','FontSize',14);
 end
 
 
@@ -123,7 +123,7 @@ function plotTCPPose(time, tcpPose)
     ylabel('TCP Pose','FontSize',12);
     legend(labels,'Location','best');
     grid on;
-    title('actual\_TCP\_pose w.r.t. base frame','FontSize',14);
+    title('TCP Pose w.r.t. base frame','FontSize',14);
 end
 
 
@@ -142,7 +142,7 @@ function plotTCPSpeed(time, tcpSpeed)
     ylabel('TCP Speed','FontSize',12);
     legend(labels,'Location','best');
     grid on;
-    title('actual\_TCP\_speed w.r.t. base frame','FontSize',14);
+    title('TCP Speed w.r.t. base frame','FontSize',14);
 end
 
 
@@ -199,7 +199,7 @@ function plotTCPForces(time, tcpForce)
     ylabel('TCP Forces / Torques','FontSize',12);
     legend(labels,'Location','best');
     grid on;
-    title('actual\_TCP\_force','FontSize',14);
+    title('TCP Forces and Torques','FontSize',14);
 end
 
 
@@ -217,5 +217,5 @@ function plotTargetMoment(time, targetMoment)
     ylabel('Target Moments (Nm)','FontSize',12);
     legend(labels,'Location','best');
     grid on;
-    title('target\_moments','FontSize',14);
+    title('Target Moments of Joints','FontSize',14);
 end

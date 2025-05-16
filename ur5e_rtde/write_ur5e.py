@@ -43,8 +43,8 @@ if __name__ == "__main__":
     parser.add_argument(
         "action",
         nargs="?",
-        choices=["home", "setup_config"],
-        default="home",
+        choices=["home", "setup_config", "random"],
+        default="random",
         help="Specify the action to perform: 'home' or 'setup_config' (defaults to 'home')."
     )
     args = parser.parse_args()
@@ -57,6 +57,9 @@ if __name__ == "__main__":
         elif args.action == "setup_config":
             setup_configuration(speed=0.5, accel=0.5)
 
+        elif args.action == "random":
+            joint_setup_position = np.array([0.0, -1.57 - 1, 0.0, -1.57, 0.0, 0.0])  # Rad
+            rtde_ctrl_iface.moveJ(joint_setup_position, speed=0.5, acceleration=0.5)
 
         print("Robot stopped.")
 

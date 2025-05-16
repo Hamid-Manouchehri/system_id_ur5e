@@ -53,6 +53,5 @@ def ur5e_homming(speed=0.1, accel=0.5):
 
 
 def setup_configuration(speed=0.1, accel=0.5):
-    # joint_setup_position = np.array([1.48174, -1.23385, 1.96952, -0.70358, 2.62826, -3.11278])  # Rad Graspio_1
-    joint_setup_position = np.array([1.40706, -1.31536, 1.61768, -1.85297, 4.708, -3.28425])  # Rad Graspio_1
-    rtde_ctrl_iface.moveJ(joint_setup_position, speed=speed)
+    joint_setup_position = np.array([1.40706, -1.31536, 1.61768, -1.85297, 4.708, -3.28425])  # Rad
+    rtde_ctrl_iface.moveJ(joint_setup_position, speed=speed, acceleration=accel)
