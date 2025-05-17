@@ -58,7 +58,8 @@ with open(csv_path, "w", newline="") as csvf:
                      "actualI1", "actualI2", "actualI3", "actualI4", "actualI5", "actualI6",
                      "outputI1", "outputI2", "outputI3", "outputI4", "outputI5", "outputI6",
                      "F_x", "F_y", "F_z", "T_x", "T_y", "T_z",
-                     "tau1", "tau2", "tau3", "tau4", "tau5", "tau6"])
+                     "tau1", "tau2", "tau3", "tau4", "tau5", "tau6",
+                     "temp1", "temp2", "temp3", "temp4", "temp5", "temp6"])
     t0 = time.time()
 
     try:
@@ -72,19 +73,22 @@ with open(csv_path, "w", newline="") as csvf:
             qCurrent = rtde_recv_iface.getActualCurrent()  # actual_current, [I1, I2, …, I6] in mA
             qControlCurrent = rtde_recv_iface.getJointControlOutput()  # joint_control_output, [I1, I2, …, I6] in mA
             tcpForce = rtde_recv_iface.getActualTCPForce()  # actual_TCP_force, [Fx, Fy, Fz, Tx, Ty, Tz]
-            targetMoment = rtde_recv_iface.getTargetMoment()  # target_moment, [T1, T2, T3, T4, T5, T6] in Nm
+            targetMoment = rtde_recv_iface.getTargetMoment()  # target_moment, [T1, T2, ..., T6] in Nm
+            qTemperatures = rtde_recv_iface.getJointTemperatures()  # joint_temperatures [t1, t2, ..., t6] in degrees Celsius
 
             ts  = time.time() - t0
 
             # write it out:
-            writer.writerow([f"{ts:.4f}"] + [f"{v:.4f}" for v in qs] +
+            writer.writerow([f"{ts:.4f}"] + 
+                            [f"{v:.4f}" for v in qs] +
                             [f"{v:.4f}" for v in qds] + 
                             [f"{v:.4f}" for v in tcpPose] +
                             [f"{v:.4f}" for v in tcpSpeed] +
                             [f"{v:.4f}" for v in qCurrent] +
                             [f"{v:.4f}" for v in qControlCurrent] +
                             [f"{v:.4f}" for v in tcpForce] + 
-                            [f"{v:.4f}" for v in targetMoment])
+                            [f"{v:.4f}" for v in targetMoment] + 
+                            [f"{v:.4f}" for v in qTemperatures])
             csvf.flush()
 
             # sleep to enforce rate

@@ -40,15 +40,19 @@ T = readtable(fullfile);
 % 3) Convert to array for easy indexing:
 data = table2array(T);
 
-time      = data(:,1);
-qs        = data(:,2:7);
-qds       = data(:,8:13);
-tcpPose   = data(:,14:19);
-tcpSpeed  = data(:,20:25);
-qActualCurrent  = data(:,26:31);
-qOutputCurrent  = data(:,32:37);
-tcpForce  = data(:,38:43);
-targetMoment  = data(:,44:end);
+time           = data(:,1);
+qs             = data(:,2:7);
+qds            = data(:,8:13);
+tcpPose        = data(:,14:19);
+tcpSpeed       = data(:,20:25);
+qActualCurrent = data(:,26:31);
+qOutputCurrent = data(:,32:37);
+tcpForce       = data(:,38:43);
+targetMoment   = data(:,44:49);
+qTemperature   = data(:,50:end);
+
+
+
 
 
 
@@ -63,6 +67,7 @@ plotJointActualCurrents(time, qActualCurrent);
 plotJointOutputCurrents(time, qOutputCurrent)
 plotTCPForces(time, tcpForce);
 plotTargetMoment(time, targetMoment);
+plotJointTemperatures(time, qTemperature);
 
 
 
@@ -219,3 +224,22 @@ function plotTargetMoment(time, targetMoment)
     grid on;
     title('target\_moments','FontSize',14);
 end
+
+function plotJointTemperatures(time, qTemp)
+%   tcpForce: Nx6 [temp1 temp2 temp3 temp4 temp5 temp6]
+
+    labels = {'temp_1','temp_2','temp_3','temp_4','temp_5','temp_6'};
+    figure;
+    hold on;
+    for k = 1:6
+        plot(time, qTemp(:,k), 'LineWidth',1.5);
+    end
+    hold off;
+    xlabel('Time (s)','FontSize',12);
+    ylabel('Joint Temperature ({{\circ}}C)','FontSize',12);
+    legend(labels,'Location','best');
+    grid on;
+    title('joint\_temperatures','FontSize',14);
+end
+
+
