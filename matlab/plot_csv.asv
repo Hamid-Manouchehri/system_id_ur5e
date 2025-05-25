@@ -40,29 +40,35 @@ T = readtable(fullfile);
 % 3) Convert to array for easy indexing:
 data = table2array(T);
 
-time      = data(:,1);
-qs        = data(:,2:7);
-qds       = data(:,8:13);
-tcpPose   = data(:,14:19);
-tcpSpeed  = data(:,20:25);
-qActualCurrent  = data(:,26:31);
-qOutputCurrent  = data(:,32:37);
-tcpForce  = data(:,38:43);
-targetMoment  = data(:,44:end);
+time           = data(:,1);
+qs             = data(:,2:7);
+qds            = data(:,8:13);
+qdds           = data(:,14:19);
+tcpPose        = data(:,20:25);
+tcpSpeed       = data(:,26:25);
+qActualCurrent = data(:,26:31);
+qOutputCurrent = data(:,32:37);
+tcpForce       = data(:,38:43);
+targetMoment   = data(:,44:49);
+qTemperature   = data(:,50:end);
 
 
 
 
 
 
-% plotJointPositions(time, qs);
-% plotJointVelocities(time, qds);
-% plotTCPPose(time, tcpPose);
-% plotTCPSpeed(time, tcpSpeed);
+
+
+
+plotJointPositions(time, qs);
+plotJointVelocities(time, qds);
+plotTCPPose(time, tcpPose);
+plotTCPSpeed(time, tcpSpeed);
 plotJointActualCurrents(time, qActualCurrent);
-% plotJointOutputCurrents(time, qOutputCurrent)
-% plotTCPForces(time, tcpForce);
-% plotTargetMoment(time, targetMoment);
+plotJointOutputCurrents(time, qOutputCurrent)
+plotTCPForces(time, tcpForce);
+plotTargetMoment(time, targetMoment);
+plotJointTemperatures(time, qTemperature);
 
 
 
@@ -87,7 +93,7 @@ function plotJointPositions(time, qs)
     legend(arrayfun(@(k) sprintf('q_%d',k), 1:6, 'Uni',false),...
            'Location','best');
     grid on;
-    title('Joint Positions','FontSize',14);
+    title('actual\_q','FontSize',14);
 end
 
 
@@ -104,7 +110,7 @@ function plotJointVelocities(time, qds)
     legend(arrayfun(@(k) sprintf('q̇_%d',k), 1:6, 'Uni',false),...
            'Location','best');
     grid on;
-    title('Joint Velocities','FontSize',14);
+    title('actual\_qd','FontSize',14);
 end
 
 
@@ -123,7 +129,7 @@ function plotTCPPose(time, tcpPose)
     ylabel('TCP Pose','FontSize',12);
     legend(labels,'Location','best');
     grid on;
-    title('TCP Pose w.r.t. base frame','FontSize',14);
+    title('actual\_TCP\_pose w.r.t. base frame','FontSize',14);
 end
 
 
@@ -142,7 +148,7 @@ function plotTCPSpeed(time, tcpSpeed)
     ylabel('TCP Speed','FontSize',12);
     legend(labels,'Location','best');
     grid on;
-    title('TCP Speed w.r.t. base frame','FontSize',14);
+    title('actual\_TCP\_speed w.r.t. base frame','FontSize',14);
 end
 
 
@@ -199,7 +205,7 @@ function plotTCPForces(time, tcpForce)
     ylabel('TCP Forces / Torques','FontSize',12);
     legend(labels,'Location','best');
     grid on;
-    title('TCP Forces and Torques','FontSize',14);
+    title('actual\_TCP\_force','FontSize',14);
 end
 
 
@@ -217,5 +223,24 @@ function plotTargetMoment(time, targetMoment)
     ylabel('Target Moments (Nm)','FontSize',12);
     legend(labels,'Location','best');
     grid on;
-    title('Target Moments of Joints','FontSize',14);
+    title('target\_moments','FontSize',14);
 end
+
+function plotJointTemperatures(time, qTemp)
+%   tcpForce: Nx6 [temp1 temp2 temp3 temp4 temp5 temp6]
+
+    labels = {'temp_1','temp_2','temp_3','temp_4','temp_5','temp_6'};
+    figure;
+    hold on;
+    for k = 1:6
+        plot(time, qTemp(:,k), 'LineWidth',1.5);
+    end
+    hold off;
+    xlabel('Time (s)','FontSize',12);
+    ylabel('Joint Temperature ({{\circ}}C)','FontSize',12);
+    legend(labels,'Location','best');
+    grid on;
+    title('joint\_temperatures','FontSize',14);
+end
+
+

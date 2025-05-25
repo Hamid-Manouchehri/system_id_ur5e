@@ -2,13 +2,14 @@
 *******************************************************************************
 
 Project: system-id ur5e
-File: write_ur5e.py
+File: inverse_dynamics.py
 Author: Hamid Manouchehri
 Email: hmanouch@buffalo.edu
-Date: May 11, 2025
+Date: May 17, 2025
 
 Description:
-Python script using RTDE protocol for writing command on UR5e.
+Python script calculating inverse dynamics of UR5e robot using 
+Recursive Newton-Euler Algorithm (RNEA).
 
 License:
 This script is licensed under the MIT License.
@@ -29,6 +30,7 @@ with the software or the use or other dealings in the software.
 """
 #!/usr/bin/env python3
 
+
 import numpy as np
 import os, csv, time, yaml, argparse
 from ur5e_rtde import get_receive_interface, get_control_interface
@@ -37,35 +39,31 @@ from ur5e_rtde._modules import ur5e_homming, setup_configuration
 rtde_recv_iface = get_receive_interface()
 rtde_ctrl_iface = get_control_interface()  
 
+
+# def rnea(q, qd, qdd, g=[0,0,-9.81]):
+
+#     for i in range(6):   # forward
+#         R[i], p[i], pc[i] = dh_transform(...)
+#         ω[i], α[i], a[i], ac[i] = fwd_recursion(...)
+#         F[i] = m[i]*ac[i]
+#         N[i] = J[i]@α[i] + np.cross(ω[i], J[i]@ω[i])
+
+#     f = n = np.zeros((7,3))
+#     τ = np.zeros(6)
+
+#     for i in reversed(range(6)):  # backward
+
+#         f[i] = R[i+1]@f[i+1] + F[i]
+#         n[i] = N[i] + R[i+1]@n[i+1] + np.cross(pc[i],F[i]) \
+#                + np.cross(p[i+1], R[i+1]@f[i+1])
+#         τ[i] = n[i]@z + (Jm[i]+Jr[i])*qdd[i]
+
+#     return τ
+
+
+
 if __name__ == "__main__":
 
-    parser = argparse.ArgumentParser(description="Script to call different functions based on arguments.")
-    parser.add_argument(
-        "action",
-        nargs="?",
-        choices=["home", "setup_config", "random"],
-        default="home",
-        help="Specify the action to perform: 'home' or 'setup_config' (defaults to 'home')."
-    )
-    args = parser.parse_args()
+    pass
 
-    try:
-            
-        if args.action == "home":
-            ur5e_homming(speed=0.5, accel=0.5)
-
-        elif args.action == "setup_config":
-            setup_configuration(speed=0.5, accel=0.5)
-
-        elif args.action == "random":
-            joint_setup_position = np.array([0.0, -1.57 - 1, 0.0, -1.57, 0.0, 0.0])  # Rad
-            rtde_ctrl_iface.moveJ(joint_setup_position, speed=0.5, acceleration=0.5)
-
-        print("Robot stopped.")
-
-    except Exception as e:
-        print(f"An error occurred: {e}")
-
-    finally:
-        # Ensure the connection is closed
-        rtde_ctrl_iface.disconnect()
+    # tau = rnea(q, qd, qdd)      # returns a 6‑element torque vector

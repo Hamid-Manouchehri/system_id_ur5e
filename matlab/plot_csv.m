@@ -29,7 +29,7 @@ with the software or the use or other dealings in the software.
 
 clc; clear; close all
 
-csv_file_name = 'ur5e_data_test.csv';  % TODO
+csv_file_name = 'ur5e_data_test_2.csv';  % TODO
 csv_dir = '/home/hamid/projects/system_id_ur5e/data/logs/';
 
 fullfile = fullfile(csv_dir, csv_file_name);
@@ -43,13 +43,14 @@ data = table2array(T);
 time           = data(:,1);
 qs             = data(:,2:7);
 qds            = data(:,8:13);
-tcpPose        = data(:,14:19);
-tcpSpeed       = data(:,20:25);
-qActualCurrent = data(:,26:31);
-qOutputCurrent = data(:,32:37);
-tcpForce       = data(:,38:43);
-targetMoment   = data(:,44:49);
-qTemperature   = data(:,50:end);
+qdds           = data(:,14:19);
+tcpPose        = data(:,20:25);
+tcpSpeed       = data(:,26:31);
+qActualCurrent = data(:,32:37);
+qOutputCurrent = data(:,38:43);
+tcpForce       = data(:,44:49);
+targetMoment   = data(:,50:55);
+qTemperature   = data(:,56:end);
 
 
 
@@ -61,6 +62,7 @@ qTemperature   = data(:,50:end);
 
 plotJointPositions(time, qs);
 plotJointVelocities(time, qds);
+plotTargetJointAccelerations(time, qdds);
 plotTCPPose(time, tcpPose);
 plotTCPSpeed(time, tcpSpeed);
 plotJointActualCurrents(time, qActualCurrent);
@@ -110,6 +112,23 @@ function plotJointVelocities(time, qds)
            'Location','best');
     grid on;
     title('actual\_qd','FontSize',14);
+end
+
+
+function plotTargetJointAccelerations(time, qdds)
+% plotTargetJointAccelerations(time, qdds)
+    figure;
+    hold on;
+    for k = 1:6
+        plot(time, qdds(:,k), 'LineWidth',1.5);
+    end
+    hold off;
+    xlabel('Time (s)',       'FontSize',12);
+    ylabel('Joint Accelerations (rad/s^2)', 'FontSize',12);
+    legend(arrayfun(@(k) sprintf('q̇_%d',k), 1:6, 'Uni',false),...
+           'Location','best');
+    grid on;
+    title('target\_qdd','FontSize',14);
 end
 
 

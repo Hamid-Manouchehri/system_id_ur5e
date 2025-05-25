@@ -1,11 +1,11 @@
 """
 *******************************************************************************
 
-Project: system-id ur5e
-File: test_ur5e.py
+Project: graspio
+File: read_ur5e_once.py
 Author: Hamid Manouchehri
 Email: hmanouch@buffalo.edu
-Date: May 8, 2025
+Date: May 24, 2025
 
 Description:
 Python script using RTDE protocol for reading status of UR5e.
@@ -29,15 +29,13 @@ with the software or the use or other dealings in the software.
 """
 #!/usr/bin/env python3
 
-import numpy as np
-import yaml
-import ur5e_rtde._modules as ur5e
+import os, csv, time, yaml
+from ur5e_rtde import get_receive_interface
 
-with open("../config/config.yml", 'r') as file:
-    config = yaml.safe_load(file)
+rtde_recv_iface = get_receive_interface()
 
-ROBOT_ID = config["UR5E"]["ROBOT_ID"]
-
+with open("../config/config.yml", "r") as f:
+    cfg = yaml.safe_load(f)
 
 def format_float_list(float_list, decimals=5):
     
@@ -47,26 +45,21 @@ def format_float_list(float_list, decimals=5):
 if __name__ == "__main__":
 
     try:
-        
-        ur5e.ur5e_homming()
-
-        joint_positions = ur5e.rtde_receive_interface.getActualQ()
+        # Read joint positions
+        joint_positions = rtde_recv_iface.getActualQ()
         print("Joint Positions (rad):\n", format_float_list(joint_positions))
 
-        joint_velocities = ur5e.rtde_receive_interface.getActualQd()
-        print("\nJoint Velocities (rad/s):\n", format_float_list(joint_velocities))
+        # Read joint velocities
+        # joint_velocities = rtde_recv_iface.getActualQd()
+        # print("\nJoint Velocities (rad/s):\n", format_float_list(joint_velocities))
 
-        tcp_position = ur5e.rtde_receive_interface.getActualTCPPose()
-        print("\nEnd-Effector Position (m and rad):\n", format_float_list(tcp_position))
+        # Read TCP position (end-effector pose w.r.t. base)
+        tcp_position = rtde_recv_iface.getActualTCPPose()
+        print("\nEnd-Effector Position w.r.t. Base (m and rad):\n", format_float_list(tcp_position))
 
-        tcp_speed = ur5e.rtde_receive_interface.getActualTCPSpeed()
-        print("\nEnd-Effector Speed (m/s and rad/s):\n", format_float_list(tcp_speed))
-
-        # print(ur5e.get_tcp_pose())
-        # ur5e.ur5e_moveJ([1.74382, -0.30455, 0.41068, -0.08044, 1.0248, 3.16844], speed=0.5, accel=0.2)  # TODO
-        
-        # ur5e.ur5e_moveL(tcp_position, speed=speed, acceleration=accel, asynchronous=False)
-
+        # Read TCP speed
+        # tcp_speed = rtde_recv_iface.getActualTCPSpeed()
+        # print("\nEnd-Effector Speed (m/s and rad/s):\n", format_float_list(tcp_speed))
 
     except Exception as e:
         print(f"An error occurred: {e}")
