@@ -1,4 +1,6 @@
 from setuptools import setup, find_packages
+# Requirement: setup a new env with python 3.9 before running setup.
+
 
 setup(
     name="system-id ur5e",

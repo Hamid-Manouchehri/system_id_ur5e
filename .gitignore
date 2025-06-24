@@ -6,3 +6,4 @@ ur5e_rtde/__pycache__/*
 data/
 matlab/*.asv
 
+matlab/*.mat

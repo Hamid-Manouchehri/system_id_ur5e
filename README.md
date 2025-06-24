@@ -2,7 +2,7 @@
 
 Activate your miniconda env manager, e.g.:
 ```
-conda activate ur5e_env
+conda activate sysid_env
 ```
 
 In order to install **ur5e_rtde** package, first change the directory to where the **setup.py** is,

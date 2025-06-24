@@ -29,7 +29,7 @@ with the software or the use or other dealings in the software.
 
 clc; clear; close all
 
-csv_file_name = 'ur5e_data_test_2.csv';  % TODO
+csv_file_name = 'ur5e_data_swing_elbow_100.csv';  % TODO, 10 is logging freq
 csv_dir = '/home/hamid/projects/system_id_ur5e/data/logs/';
 
 fullfile = fullfile(csv_dir, csv_file_name);
@@ -40,17 +40,17 @@ T = readtable(fullfile);
 % 3) Convert to array for easy indexing:
 data = table2array(T);
 
-time           = data(:,1);
-qs             = data(:,2:7);
-qds            = data(:,8:13);
-qdds           = data(:,14:19);
-tcpPose        = data(:,20:25);
-tcpSpeed       = data(:,26:31);
-qActualCurrent = data(:,32:37);
-qOutputCurrent = data(:,38:43);
-tcpForce       = data(:,44:49);
-targetMoment   = data(:,50:55);
-qTemperature   = data(:,56:end);
+time           = data(:,1);      % timestamp in s
+qs             = data(:,2:7);    % actual_q, [q₁,…,q₆] in rad
+qds            = data(:,8:13);   % actual_qd, [q̇₁,…,q̇₆] in rad/s
+qdds           = data(:,14:19);  % target_qdd, [qdd1, qdd2, ..., qdd6] in rad/s^2
+tcpPose        = data(:,20:25);  % actual_TCP_pose, [x,y,z, Rx, Ry, Rz]
+tcpSpeed       = data(:,26:31);  % actual_TCP_speed, [vx, vy, vz, ωx, ωy, ωz]
+qActualCurrent = data(:,32:37);  % actual_current, [I1, I2, …, I6] in mA
+qOutputCurrent = data(:,38:43);  % joint_control_output, [I1, I2, …, I6] in mA
+tcpForce       = data(:,44:49);  % actual_TCP_force, [Fx, Fy, Fz, Tx, Ty, Tz]
+targetMoment   = data(:,50:55);  % target_moment, [T1, T2, ..., T6] in Nm
+qTemperature   = data(:,56:end); % joint_temperatures [t1, t2, ..., t6] in degrees Celsius
 
 
 
@@ -59,17 +59,16 @@ qTemperature   = data(:,56:end);
 
 
 
-
-plotJointPositions(time, qs);
-plotJointVelocities(time, qds);
-plotTargetJointAccelerations(time, qdds);
-plotTCPPose(time, tcpPose);
-plotTCPSpeed(time, tcpSpeed);
+% plotJointPositions(time, qs);
+% plotJointVelocities(time, qds);
+% plotTargetJointAccelerations(time, qdds);
+% plotTCPPose(time, tcpPose);
+% plotTCPSpeed(time, tcpSpeed);
 plotJointActualCurrents(time, qActualCurrent);
 plotJointOutputCurrents(time, qOutputCurrent)
-plotTCPForces(time, tcpForce);
+% plotTCPForces(time, tcpForce);
 plotTargetMoment(time, targetMoment);
-plotJointTemperatures(time, qTemperature);
+% plotJointTemperatures(time, qTemperature);
 
 
 
