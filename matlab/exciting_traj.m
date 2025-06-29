@@ -27,172 +27,125 @@ with the software or the use or other dealings in the software.
 
 *******************************************************************************
 %}
-clc; %clear; close all;
 
-disp("loading regressor .mat file...");
-load("../data/mat/Y_sym.mat");
+% optimizeExcitingTraj.m
+clc; clear; close all;
 
-[xOpt, traj, Ybig] = designExcitingTrajectory(Y_sym);
+% 1) Load the symbolic regressor
+tmp   = load('../data/mat/Y_sym.mat','Y_sym');
+Y_sym = tmp.Y_sym;
+Y_fun = @Y_fun;
 
-% quick visual check
-figure; plot(traj.t, rad2deg(traj.q).');  grid on
-xlabel('time [s]'); ylabel('q [deg]'); title('Optimised joint motion');
-fprintf('cond(Ybig) = %.3e\n', cond(Ybig));
+% 3) Hyper‐parameters
+nJ   = 6;     % DoF
+N    = 4;     % harmonics
+Tf   = 10;    % total duration [s]
+Ns   = 50;    % time samples
 
-
-
-function [xOpt, traj, Ybig] = designExcitingTrajectory(Y_sym)
-% -------------------------------------------------------------------------
-%  Exciting-trajectory design for dynamic-parameter identification
-%  (SCHUNK Powerball example – easily adapted to any n-DoF chain).
-%
-%  INPUT
-%    Y_sym  – symbolic regressor  (n×P)  from buildRegressorSymbolic()
-%
-%  OUTPUT
-%    xOpt   – optimal Fourier-coefficient vector  [a(:); b(:)]
-%    traj   – struct with fields .t, .q, .qd, .qdd  (n×Ns each)
-%    Ybig   – stacked regressor along the trajectory (n*Ns × P)
-% -------------------------------------------------------------------------
-
-% -------- USER SECTION ---------------------------------------------------
-nJ  = 6;             % DoF
-N   = 4;             % # harmonics
-Tf  = 2;            % fundamental period  (ω_f = 2π/Tf)
-Ns  = 5;           % # time samples  (≈ optimisation grid)
-
-qMin   = deg2rad([-170 -120 -170 -120 -170 -120]);  %  << joint limits
-qMax   = deg2rad([ 170  120  170  120  170  120]);
-qdLim  = deg2rad([ 120  120  120  180  180  180]);  %  velocity limits
-qddLim = deg2rad([ 300  300  300  300  300  300]);  %  acceleration limits
-% -------------------------------------------------------------------------
+qMin   = deg2rad([-360 -360 -360 -360 -360 -360])';
+qMax   = deg2rad([ 360  360  360  360  360  360])';
+qdLim  = deg2rad([180 180 180 180 180 180])';
+qddLim = deg2rad([300 300 300 300 300 300])';
 
 omega_f = 2*pi/Tf;
 tGrid   = linspace(0,Tf,Ns);
 
-% ---- convert symbolic regressor to fast numeric function for Y ---------- 
-disp("changing Y_sym to Y_fun...");
-qSym   = sym('q',[6,1]);
-dqSym  = sym('dq',[6,1]);
-ddqSym = sym('ddq',[6,1]);
-Yfun = matlabFunction(Y_sym, 'Vars', {qSym, dqSym, ddqSym});
-
-% ---- coefficient initial guess & conservative bounds --------------------
+% 4) Initial guess and bounds
 nCoeff = 2*N*nJ;
-x0     = zeros(nCoeff,1);                      % start from rest
+ab0    = zeros(nCoeff,1);
 
-ampPos = (qMax-qMin)/2;                        % mid-range amplitude
-UB     =  repmat(ampPos(:).*omega_f,2*N,1);    % position-based cap
-LB     = -UB;
+% here we just give loose infinite bounds; tighten as needed:
+% LB = -Inf(nCoeff,1);
+% UB =  Inf(nCoeff,1);
+LB     = -[qMax; qdLim; qddLim];
+UB     = -LB;
 
-%--- parallel pool (optional) -------------------------------
-% only do this if you really want parallel finite‐diff
-if isempty(gcp('nocreate'))
-    try
-      parpool;   % start with default profile
-    catch
-      warning('Couldn''t start parallel pool: continuing in serial.');
-    end
-end
-% ---- fmincon setup ------------------------------------------------------
+% 5) Counter for calls
+global callCount
+callCount = 0;
+
+% 6) fmincon options
 opts = optimoptions('fmincon', ...
-            'Algorithm',       'sqp', ...
-            'Display',         'iter', ...
-            'UseParallel',     true, ...  % now only if pool exists
-            'MaxFunctionEvaluations', 3e4);
+    'Algorithm','sqp', ...
+    'Display','iter', ...
+    'FiniteDifferenceType','forward', ...
+    'UseParallel',true, ...
+    'MaxFunctionEvaluations',3e4);
 
-% 2) debug at x0, before fmincon:
-J0 = objective(x0);
-[c0,ceq0] = nonlcon(x0);
-fprintf('J0 = %g; c0 min = %g; ceq0 min = %g\n', J0, min(c0), min(ceq0));
+% 7) Build function handles
+objFun = @(ab) objective(ab, Y_fun, tGrid, omega_f, nJ, N, qMin, qMax, size(Y_sym,2));
+nonl   = [];  % or @nonlcon if you have constraints
 
-disp("computing fmincon...")
-[xOpt,~,exitflag,output] = fmincon(@objective,x0,[],[],[],[],LB,UB,[],opts);
+% 8) Call fmincon, capturing all outputs
+[abOpt, fval, exitflag, output, lambda, grad, hessian] = ...
+    fmincon(objFun, ab0, [],[],[],[], LB, UB, nonl, opts);
 
-fprintf('\nExitflag %d  –  %s\n',exitflag,output.message);
+% 9) Report solver diagnostics
+fprintf('\n=== fmincon results ===\n');
+fprintf('  exitflag = %d\n', exitflag);
+fprintf('  fval     = %g\n', fval);
+disp('  output = '),    disp(output)
+disp('  lambda = '),    disp(lambda)
+disp('  grad   = '),    disp(grad)
+disp('  hessian = '),   disp(hessian)
 
-% ---- reconstruct optimised trajectory & full regressor -----------------
-[q,qd,qdd] = seriesFromCoeff(xOpt,tGrid,omega_f,nJ,N,qMin,qMax);
-traj = struct('t',tGrid,'q',q,'qd',qd,'qdd',qdd);
+fprintf('objective was called %d times\n', callCount);
 
-Ybig = zeros(nJ*Ns,size(Y_sym,2));
-for k = 1:Ns
-    idx = (k-1)*nJ+(1:nJ);
-    Ybig(idx,:) = Yfun(q(:,k),qd(:,k),qdd(:,k));
+% 10) Reconstruct and plot
+[q,qd,qdd] = seriesFromCoeff(abOpt, tGrid, omega_f, nJ, N, qMin, qMax);
+figure; plot(tGrid, rad2deg(q).','LineWidth',1.4);
+grid on; xlabel('t [s]'); ylabel('q [deg]');
+title('Optimized Trajectories');
+
+% =========================================================================
+% Local functions
+% =========================================================================
+
+function J = objective(ab, Y_fun, tGrid, omega_f, nJ, N, qMin, qMax, P)
+  % count calls
+  global callCount
+  callCount = callCount + 1;
+
+  Ns = numel(tGrid);
+  [qk, qdk, qddk] = seriesFromCoeff(ab, tGrid, omega_f, nJ, N, qMin, qMax);
+
+  Ystk = zeros(nJ*Ns, P);
+  for kk = 1:Ns
+    idx = (kk-1)*nJ + (1:nJ);
+    Ystk(idx,:) = Y_fun(qk(:,kk), qdk(:,kk), qddk(:,kk));
+  end
+
+  % compute cost
+  s = svd(Ystk);
+  condY = s(1)/s(end);
+  sigma_min = s(end);
+  J = condY + 1/sigma_min;
+
+  if ~isfinite(J)
+    J = 1e6;
+  end
 end
-% -------------------------------------------------------------------------
 
-% ================= nested objective & constraints =======================
+function [q, qd, qdd] = seriesFromCoeff(x, t, omega_f, nJ, N, qMin, qMax)
+  Ns = numel(t);
+  a  = reshape(x(1:nJ*N),      N, nJ);
+  b  = reshape(x(nJ*N+1:end),  N, nJ);
+  q0 = (qMax + qMin)/2;
 
-    function J = objective(x)
-        % build trajectory
-        [qk, qdk, qddk] = seriesFromCoeff(x, tGrid, omega_f, nJ, N, qMin, qMax);
+  q   = zeros(nJ, Ns);
+  qd  = zeros(nJ, Ns);
+  qdd = zeros(nJ, Ns);
 
-        % stack the regressor
-        Ystk = zeros(nJ*Ns, size(Y_sym,2));
-        for kk = 1:Ns
-            idx = (kk-1)*nJ + (1:nJ);
-            M = Yfun(qk(:,kk), qdk(:,kk), qddk(:,kk));
-            Ystk(idx,:) = M;
-        end
-
-        % compute condition number, guard against singularity
-        J = cond(Ystk);
-        if ~isfinite(J)    % catches Inf or NaN
-            J = 1e6;       % a large finite penalty
-        end
+  for k = 1:Ns
+    w   = omega_f * (1:N).';
+    si  = sin(w * t(k));
+    co  = cos(w * t(k));
+    for i = 1:nJ
+      ai = a(:,i);  bi = b(:,i);
+      q(i,k)   = q0(i) + sum((ai./w).*si - (bi./w).*co);
+      qd(i,k)  =          sum( ai.*co    +  bi.*si);
+      qdd(i,k) =          sum(-ai.*w.*si +  bi.*w.*co);
     end
-
-
-    % function [c,ceq] = nonlcon(x)
-    %     [qk,qdk,qddk] = seriesFromCoeff(x, tGrid, omega_f, nJ, N, qMin, qMax);
-    % 
-    %     % enforce the box‐limits
-    %     c = [ reshape(qk-qMax(:),[],1);
-    %           reshape(qMin(:)-qk,[],1);
-    %           reshape(qdk-qdLim(:),[],1);
-    %           reshape(-qdk-qdLim(:),[],1);
-    %           reshape(qddk-qddLim(:),[],1);
-    %           reshape(-qddk-qddLim(:),[],1) ];
-    % 
-    %     % if anything went NaN, make it obviously infeasible
-    %     if any(isnan(qk(:))) || any(isnan(qdk(:))) || any(isnan(qddk(:)))
-    %         c = 1e6*ones(size(c));
-    %     end
-    % 
-    %     ceq = [];  % no equality constraints
-    % end
-
+  end
 end
-% ================ END OF MAIN FUNCTION ===================================
-
-
-% ========================================================================
-%  Local utility: Fourier-series → q,qd,qdd  (kept as sub-function)
-% ========================================================================
-function [q,qd,qdd] = seriesFromCoeff(x,t,omega_f,nJ,N,qMin,qMax)
-    disp("inside seriesFromCoeff");
-    Ns  = numel(t);
-    a   = reshape(x(1:nJ*N),      N,nJ);   % N×nJ
-    b   = reshape(x(nJ*N+1:end),  N,nJ);
-    
-    q0  = (qMax+qMin)/2;                    % centre of each joint range
-    q   = zeros(nJ,Ns);
-    qd  = zeros(nJ,Ns);
-    qdd = zeros(nJ,Ns);
-    
-    for k = 1:Ns
-        w = omega_f*(1:N).';                    % column vector
-        si = sin(w*t(k));
-        co = cos(w*t(k));
-        for i = 1:nJ
-            ai = a(:,i);  bi = b(:,i);
-            q(i,k)   = q0(i) + sum( (ai./w).*si - (bi./w).*co );
-            qd(i,k)  =          sum(  ai.*co   +  bi.*si   );
-            qdd(i,k) =          sum( -ai.*w.*si + bi.*w.*co );
-        end
-    end
-    disp("jump out of seriesFromCoeff");
-end
-
 

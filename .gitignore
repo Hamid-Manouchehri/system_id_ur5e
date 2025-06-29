@@ -5,5 +5,8 @@ TASKS.md
 ur5e_rtde/__pycache__/*
 data/
 matlab/*.asv
-
+matlab/test.m
 matlab/*.mat
+.gitignore.swn
+.gitignore.swp
+.gitignore

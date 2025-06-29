@@ -328,7 +328,11 @@ save ../data/mat/tau_lagrangian tau_lagrangian
 save ../data/mat/Y_sym Y_sym
 save ../data/mat/p p
 
-
+disp("saving Y_sym as a function...");
+qSym   = sym('q',[6,1]);
+dqSym  = sym('dq',[6,1]);
+ddqSym = sym('ddq',[6,1]);
+matlabFunction(Y_sym, 'File','Y_fun','Vars',{qSym,dqSym,ddqSym});
 
 
 % [q, qd, qdd] = optimization_fcn(Y);
