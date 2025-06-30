@@ -248,43 +248,13 @@ function J = cond_at_time(x, tk, q0, N, Y_sym, q_sym, omega_f)
 end
 
 %% test fourier-series function
-clc; clear; close all;
-
-nJ   = 1;
-N    = 4;        % harmonics per joint
-Tf   = 10;       % TODO; fundamental period / duration [s]
-Ns   = 50;      % TODO; number of time samples
-
-omega_f = 2*pi/Tf;
-tGrid   = linspace(0,Tf,Ns);
-
-[q, qd, qdd] = seriesFromCoeff(x, tGrid, omega_f, nJ, N);
-
-figure;
-plot(tGrid, rad2deg(traj.q).','LineWidth',1.4);
-grid on;
-xlabel('time [s]'); ylabel('q [deg]');
-title('Optimised Joint Motions');
-
-function [q, qd, qdd] = seriesFromCoeff(x, t, omega_f, nJ, N)
-    Ns = numel(t);
-    a  = reshape(x(1:nJ*N),      N, nJ);
-    b  = reshape(x(nJ*N+1:end),  N, nJ);
-    q0 = 0;
-
-    q   = zeros(nJ, Ns);
-    qd  = zeros(nJ, Ns);
-    qdd = zeros(nJ, Ns);
-
-    for k = 1:Ns
-        w  = omega_f * (1:N).';
-        si = sin(w * t(k));
-        co = cos(w * t(k));
-        for i = 1:nJ
-            ai = a(:,i);  bi = b(:,i);
-            q(i,k)   = q0(i) + sum((ai./w).*si - (bi./w).*co);
-            qd(i,k)  =          sum( ai.*co    +  bi.*si);
-            qdd(i,k) =          sum(-ai.*w.*si +  bi.*w.*co);
-        end
-    end
-end
+clc; clear all; close all;
+fun = @objfun;                              % objective function
+x0 = 1;                                % initial guess
+A =[]; b = [];                            % Linear Inequality Constraint: A*X<b
+Aeq = []; beq = [];                         % Linear Equality Constraint: Aeq*X=beq
+lb = [0,0]; ub = [1,2];                     % Lower and Upper Bound of variables
+nonlcon = @mycon;                           % Nonlinear Constraint function
+options = optimoptions('fmincon','Algorithm','sqp','Display','iter','OptimalityTolerance',1e-15, 'ConstraintTolerance',1e-15,'StepTolerance',1e-20,'MaxFunctionEvaluations',5e+5);
+sentence = 'This is a messaged passed by fmincon to ';
+[x_opt,fval,exitflag,output,lambda,grad,hesian] = fmincon(fun,x0,A,b,Aeq,beq,lb,ub,nonlcon,options,sentence);

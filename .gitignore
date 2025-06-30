@@ -7,6 +7,8 @@ data/
 matlab/*.asv
 matlab/test.m
 matlab/*.mat
-.gitignore.swn
-.gitignore.swp
-.gitignore
+matlab/Y_fun_test.m
+matlab/id_test.m
+.*.swn
+.*.swp
+.*.swo
