@@ -34,9 +34,11 @@ clear;
 close all;
 
 % 1) Load the symbolic regressor
-tmp   = load('../data/mat/Y_sym_test.mat','Y_sym_test');
-Y_sym = tmp.Y_sym_test;
-Y_fun = @Y_fun_test;
+tmp   = load('./Y_simp.mat','Y_simp');
+Y_sym = tmp.Y_simp;
+Y_fun = @Y_fun;  % args: (ddq1,ddq2,ddq3,ddq4,ddq5,ddq6,...
+                 %        dq1,dq2,dq3,dq4,dq5,dq6,...
+                 %        q1,q2,q3,q4,q5,q6)
 
 % 3) Hyper‐parameters
 nJ   = 6;     % DoF
@@ -59,7 +61,7 @@ ab0    = ones(nCoeff,1);
 % here we just give loose infinite bounds; tighten as needed:
 % LB = -Inf(nCoeff,1);
 % UB =  Inf(nCoeff,1);
-LB  = -[qMax; qdLim; qddLim];
+LB  = -10*ones(nCoeff, 1);
 UB  = -LB;
 A   = []; b = [];
 Aeq = []; beq = [];
@@ -69,12 +71,12 @@ opts = optimoptions('fmincon', ...
     'Algorithm','sqp', ...
     'Display','iter', ...
     'FiniteDifferenceType','forward', ...
-    'UseParallel',true, ...
+    'UseParallel',false, ...
     'MaxFunctionEvaluations',3e4, ...
-    'PlotFcn',{ @optimplotfval, ...            % objective vs iter
+    'PlotFcn',{ @optimplotfval, ...           % objective vs iter
                 @optimplotfirstorderopt, ...  % KKT optimality
                 @optimplotstepsize, ...       % step size
-                @optimplotconstrviolation });   % max constraint violation);
+                @optimplotconstrviolation }); % max constraint violation);
 
 % 7) Build function handles
 objFun = @(ab) objective(ab, Y_fun, tGrid, omega_f, nJ, N, qMin, qMax, size(Y_sym,2));
@@ -84,24 +86,15 @@ nonl   = [];  % or @nonlcon if you have constraints
 [abOpt, fval, exitflag, output, lambda, grad, hessian] = ...
     fmincon(objFun, ab0, A, b, Aeq, beq, LB, UB, nonl, opts);
 
-% 9) Report solver diagnostics
-% fprintf('\n=== fmincon results ===\n');
-% fprintf('  exitflag = %d\n', exitflag);
-% fprintf('  fval     = %g\n', fval);
-% disp('  output = '),    disp(output)
-% disp('  lambda = '),    disp(lambda)
-% disp('  grad   = '),    disp(grad)
-% disp('  hessian = '),   disp(hessian)
-
 % fprintf('objective was called %d times\n', objective_counter);
 
 % 10) Reconstruct and plot
-[q,qd,qdd] = seriesFromCoeff(abOpt, tGrid, omega_f, nJ, N, qMin, qMax);
-hold on;
-figure
-plot(tGrid, rad2deg(q).','LineWidth',1.4);
-grid on; xlabel('t [s]'); ylabel('q [deg]');
-title('Optimized Trajectories');
+% [q,qd,qdd] = seriesFromCoeff(abOpt, tGrid, omega_f, nJ, N, qMin, qMax);
+% hold on;
+% figure
+% plot(tGrid, rad2deg(q).','LineWidth',1.4);
+% grid on; xlabel('t [s]'); ylabel('q [deg]');
+% title('Optimized Trajectories');
 
 % =========================================================================
 % Local functions
@@ -148,7 +141,8 @@ function [q, qd, qdd] = seriesFromCoeff(x, t, omega_f, nJ, N, qMin, qMax)
         si  = sin(w * t(k));
         co  = cos(w * t(k));
         for i = 1:nJ
-            ai = a(:,i);  bi = b(:,i);
+            ai = a(:,i);  
+            bi = b(:,i);
             q(i,k)   = q0(i) + sum((ai./w).*si - (bi./w).*co);
             qd(i,k)  =         sum( ai.*co    +  bi.*si);
             qdd(i,k) =         sum(-ai.*w.*si +  bi.*w.*co);

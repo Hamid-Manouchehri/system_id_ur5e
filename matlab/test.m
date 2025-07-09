@@ -258,3 +258,95 @@ nonlcon = @mycon;                           % Nonlinear Constraint function
 options = optimoptions('fmincon','Algorithm','sqp','Display','iter','OptimalityTolerance',1e-15, 'ConstraintTolerance',1e-15,'StepTolerance',1e-20,'MaxFunctionEvaluations',5e+5);
 sentence = 'This is a messaged passed by fmincon to ';
 [x_opt,fval,exitflag,output,lambda,grad,hesian] = fmincon(fun,x0,A,b,Aeq,beq,lb,ub,nonlcon,options,sentence);
+
+
+%% simple fmincon function implementation
+
+clc; clear; close all;
+
+% 1) Generate synthetic data
+T   = 2*pi;                 % one period
+Ns  = 200;                  % # time samples
+t   = linspace(0, T, Ns);   % time vector
+A0  = 2.5;  phi0 = 0.8;     % true amplitude & phase
+y0  = A0 * sin(t + phi0);   % noiseless
+y   = y0 + 0.3*randn(size(t));  % add Gaussian noise
+
+figure; 
+plot(t,y0,'-g','LineWidth',1.5); hold on;
+plot(t,y ,'r.'); 
+xlabel('t'); ylabel('y');
+legend('true','noisy data');
+title('Noisy sine data'); grid on;
+
+% 2) Define the objective: sum of squared errors over t
+% x = [A; phi]
+objFun = @(x) sum( ( x(1)*sin(t + x(2)) - y ).^2 );
+
+% 3) Initial guess and bounds
+x0   = [1; 0];         % [amplitude; phase]
+lb   = [0; -pi];       % amplitude ≥ 0, phase within [−π,π]
+ub   = [10; +pi];
+
+% 4) fmincon options
+opts = optimoptions('fmincon', ...
+    'Algorithm','sqp', ...
+    'Display','iter', ...
+    'FiniteDifferenceType','forward', ...
+    'MaxFunctionEvaluations',1e4);
+
+% 5) Run fmincon
+[xopt, fval, exitflag, output] = fmincon( ...
+    objFun, x0, ...       % objective and initial guess
+    [],[],[],[], ...      % no linear constraints
+    lb, ub, ...           % simple bounds
+    [], opts );           % no nonlinear constraints
+
+fprintf('\nResult: A = %.4f,  phi = %.4f (true: %.4f, %.4f)\n', ...
+        xopt(1), xopt(2), A0, phi0);
+
+% 6) Plot the fitted curve
+yfit = xopt(1)*sin(t + xopt(2));
+figure;
+plot(t,y,'.g'); hold on;
+plot(t,yfit,'r-','LineWidth',1.5);
+xlabel('t'); ylabel('y');
+legend('noisy data','fitted sine');
+title('fmincon fit'); grid on;
+
+% 7) Inspect solver info if desired
+disp(output)
+
+
+%%
+clc; clear; close all;
+% Suppose your decision vector is x (length n), and
+% you have a MATLAB function (or anonymous) Y_of_x that
+% given x returns a p×p (or p×m) numeric matrix.
+
+% e.g. as an anonymous handle:
+Y_of_x = @(x) [ sin(x(1)),   x(2)*cos(x(1)),  x(3);
+                x(2),       x(1)+x(3),       sin(x(2));
+                x(1)*x(3),  x(2)^2,          cos(x(3)) ];
+
+% now build an objective that returns the 2-norm condition number:
+objFun = @(x) guardCond( cond( Y_of_x(x) ) );
+
+% where guardCond simply replaces Inf/NaN with a large finite penalty:
+function J = guardCond(c)
+  if   ~isfinite(c)
+    J = 1e6;       % or whatever large penalty
+  else
+    J = c;
+  end
+end
+
+% Then call fmincon as usual:
+x0 = ones(3,1);           % initial guess
+lb = zeros(3,1); ub = 10*ones(3,1);
+opts = optimoptions('fmincon','Display','iter','Algorithm','sqp');
+[x_opt, fval] = fmincon(objFun, x0, [],[],[],[], lb,ub,[], opts);
+
+fprintf('Minimized cond = %.3g at x = [%s]\n', fval, num2str(x_opt.',3));
+
+

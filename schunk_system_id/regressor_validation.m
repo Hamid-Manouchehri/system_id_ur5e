@@ -61,8 +61,10 @@ t = linspace(0, duration, Ns);
 
 % default joint angles at home configuration: [0.0, -1.57, 0.0, -1.57, 0.0, 0.0]
 q(1,:) = 0.*ones(1,Ns); qd(1,:) = zeros(1,Ns); qdd(1,:) = zeros(1,Ns);
-q(2,:) = -pi/2*ones(1,Ns); qd(2,:) = zeros(1,Ns); qdd(2,:) = zeros(1,Ns);
-[q(3,:), qd(3,:), qdd(3,:)] = sinTrajectory(amp, duration, Ns, -pi/2, t);
+% q(2,:) = -pi/2*ones(1,Ns); qd(2,:) = zeros(1,Ns); qd6d(2,:) = zeros(1,Ns);
+[q(2,:), qd(2,:), qdd(2,:)] = sinTrajectory(amp, duration, Ns, -pi/2, t);
+% [q(3,:), qd(3,:), qdd(3,:)] = sinTrajectory(amp, duration, Ns, -pi/2, t);
+q(3,:) = 0*ones(1,Ns); qd(3,:) = zeros(1,Ns); qdd(3,:) = zeros(1,Ns);
 q(4,:) = -pi/2*ones(1,Ns); qd(4,:) = zeros(1,Ns); qdd(4,:) = zeros(1,Ns);
 q(5,:) = 0.*ones(1,Ns); qd(5,:) = zeros(1,Ns); qdd(5,:) = zeros(1,Ns);
 q(6,:) = 0.*ones(1,Ns); qd(6,:) = zeros(1,Ns); qdd(6,:) = zeros(1,Ns);
