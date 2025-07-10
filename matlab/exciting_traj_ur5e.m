@@ -28,20 +28,19 @@ with the software or the use or other dealings in the software.
 *******************************************************************************
 %}
 
-% optimizeExcitingTraj.m
 clc; 
 clear; 
 close all;
 
-% 1) Load the symbolic regressor
-tmp   = load('../data/mat/Y_sym_test.mat','Y_sym_test');
-Y_sym = tmp.Y_sym_test;
-Y_fun = @Y_fun_test;
+% Load the symbolic regressor
+tmp   = load('../data/mat/Y_sym.mat','Y_sym');
+Y_sym = tmp.Y_sym;
+Y_fun = @Y_fun;
 
 X = [];
 
 dt = 1;
-T = 20;
+T = 5;
 
 Wf = 2*pi/10;
 N = 4;     % number of frequences
@@ -61,8 +60,7 @@ end
 
 Q_max = [140*ones(6,1) ; 70*ones(6,1) ; 50*ones(6,1)]*pi/180;
 Q_max = repmat(Q_max,2*length(t),1);
-
-objFun = @(x) regressor_cond(X, A, t, lambda1, lambda2, Y_fun);
+objFun = @(x) regressor_cond(x, A, t, lambda1, lambda2, Y_sym);
 
 opts = optimoptions('fmincon', ...
     'Algorithm','sqp', ...
@@ -123,8 +121,8 @@ function A = cal_A(t,J,N,Wf)
     end
 end
 
-function R = regressor_cond(X, A, t, lambda1, lambda2, Y_fun)
-    % X: decision variables (nx×1)
+function R = regressor_cond(X, A, t, lambda1, lambda2, Y_sym)
+
     Q = A*X;
     R = 0;
 
@@ -145,10 +143,10 @@ function R = regressor_cond(X, A, t, lambda1, lambda2, Y_fun)
         r01_x, r01_y, r01_z, r12_x, r12_y, r12_z, r23_x, r23_y, r23_z, ...
         r34_x, r34_y, r34_z, r45_x, r45_y, r45_z, r56_x, r56_y, r56_z] = Kinematic_Param(Q( (k-1)*18+1 : (k-1)*18+18 ));
 
-        Y_num = subs(regressor_red);
+        Y_num = subs(Y_sym);
         Y_num = eval(Y_num);
         s = svd(Y_num);
-        R = R + ( landa1*cond(Y_num) + landa2/( s(nnz(s))) );
+        R = R + ( lambda1*cond(Y_num) + lambda2/( s(nnz(s))) );
 
     end
     disp(['R = ' num2str(R)])

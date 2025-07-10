@@ -7,7 +7,7 @@ load regressor_reduced_33
 X = [];
 
 dt = 1;
-T = 5;
+T = 1;
 
 Wf = 2*pi/10;
 N = 4;     % number of frequences
