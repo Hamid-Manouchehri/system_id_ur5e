@@ -1,7 +1,3 @@
-exciting_traj()
-
-function x = exciting_traj()
-
 clc; close all;
 
 regressor_red = [];
@@ -21,40 +17,39 @@ landa1 = 1;
 landa2 = 1;
 
 x0 = ones(J*2*N,1);
-
 A = [];
 
 for i=1:length(t)
-
-    A = [A ; cal_A(t(i))];
-
+    A = [A ; cal_A(t(i),J,N,Wf)];
 end
-
-
 
 % fmincon(fun,x0,A,b,Aeq,beq,lb,ub,nonlcon,options)
 
 Q_max = [140*ones(6,1) ; 70*ones(6,1) ; 50*ones(6,1)]*pi/180;
-
 Q_max = repmat(Q_max,2*length(t),1);
+objFun = @(x) regressor_cond(X, A, t, lambda1, lambda2, Y_fun);
 
-[x,fval,exitflag] = fmincon(@regressor_cond,x0,[A;-A],Q_max,[],[],[],[],[],[]);
+opts = optimoptions('fmincon', ...
+    'Algorithm','sqp', ...
+    'Display','iter', ...
+    'FiniteDifferenceType','forward', ...
+    'UseParallel',true, ...
+    'MaxFunctionEvaluations',3e2, ...
+    'PlotFcn',{ @optimplotfval, ...           % objective vs iter
+                @optimplotfirstorderopt, ...  % KKT optimality
+                @optimplotstepsize, ...       % step size
+                @optimplotconstrviolation }); % max constraint violation);
 
-
+[x,fval,exitflag] = fmincon(@regressor_cond,x0,[A;-A],Q_max,[],[],[],[],[],opts);
 
 A = [];
-
 t = 0:0.05:T;
 
 for i = 1:length(t)
-
-    A = [A ; cal_A(t(i))];
-
+    A = [A ; cal_A(t(i),J,N,Wf)];
 end
 
 Q = A*x;
-
-
 
 figure;
 
@@ -65,30 +60,21 @@ plot(t,Q(4:18:end),'k');
 plot(t,Q(5:18:end),'c');
 plot(t,Q(6:18:end),'m');
 
-
-
 %%% Construct A matrix (can be used for trajectory generation 
 
 %%% and optimization linear condition as well . Ax = Q
 
-    function A = cal_A(t)
+    function A = cal_A(t,J,N,Wf)
 
         A = zeros(3*J , 2*N*J);
-
-
-
         sub_q = [];
-
         sub_qd = [];
-
         sub_qdd = [];
 
         for l=1:N
 
             sub_q = [sub_q , 1/(Wf*l)*[sin(Wf*l*t) , -cos(Wf*l*t)] ];
-
             sub_qd = [sub_qd , [cos(Wf*l*t) , sin(Wf*l*t)] ];
-
             sub_qdd = [sub_qdd , (Wf*l)*[-sin(Wf*l*t) , cos(Wf*l*t)] ];
 
         end
@@ -97,13 +83,12 @@ plot(t,Q(6:18:end),'m');
 
         for n=1:3
             for i=1:J
-
                 A( (n-1)*J+i , 2*N*(i-1)+1:2*N*i ) = sub_Q(n,:);
             end
         end
     end
 
-    function R = regressor_cond(X)
+    function R = regressor_cond(X, A, t, lambda1, lambda2, Y_fun)
         Q = A*X;
         R = 0;
 
@@ -125,21 +110,10 @@ plot(t,Q(6:18:end),'m');
             r34_x, r34_y, r34_z, r45_x, r45_y, r45_z, r56_x, r56_y, r56_z] = Kinematic_Param(Q( (k-1)*18+1 : (k-1)*18+18 ));
 
             Y_num = subs(regressor_red);
-
             Y_num = eval(Y_num);
-
             s = svd(Y_num);
-
-            R = R + ( landa1*cond(Y_num) + landa2/( s(nnz(s))) );
+            R = R + ( lambda1*cond(Y_num) + lambda2/( s(nnz(s))) );
 
         end
-
         disp(['R = ' num2str(R)])
-
     end
-
-
-
-
-
-end

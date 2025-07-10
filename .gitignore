@@ -12,3 +12,4 @@ matlab/id_test.m
 .*.swn
 .*.swp
 .*.swo
+schunk_system_id/*.asv
