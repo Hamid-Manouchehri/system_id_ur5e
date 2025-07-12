@@ -6,8 +6,8 @@ load regressor_reduced_33
 
 X = [];
 
-dt = 1;
-T = 1;
+dt = 0.1;
+T = 30;
 
 Wf = 2*pi/10;
 N = 4;     % number of frequences
@@ -20,7 +20,7 @@ x0 = ones(J*2*N,1);
 A = [];
 
 for i=1:length(t)
-    A = [A ; cal_A(t(i),J,N,Wf)];
+    A = [A ; cal_A(t(i),J,N,Wf)];  % (3*J*#time_samples) * (2*N*J) ----> 3 represents 3 set of states (q, qd, qdd) and 2 is for a_i and b_i
 end
 
 % fmincon(fun,x0,A,b,Aeq,beq,lb,ub,nonlcon,options)
@@ -43,7 +43,7 @@ opts = optimoptions('fmincon', ...
 [x,fval,exitflag] = fmincon(objFun,x0,[A;-A],Q_max,[],[],[],[],[],opts);
 
 A = [];
-t = 0:0.05:T;
+t = 0:dt:T;
 
 for i = 1:length(t)
     A = [A ; cal_A(t(i),J,N,Wf)];
@@ -66,7 +66,7 @@ plot(t,Q(6:18:end),'m');
 
 function A = cal_A(t,J,N,Wf)
 
-    A = zeros(3*J , 2*N*J);
+    A = zeros(3*J , 2*N*J);  % 2 is cuz of two coefficients of a_i and b_i
     sub_q = [];
     sub_qd = [];
     sub_qdd = [];
@@ -79,7 +79,7 @@ function A = cal_A(t,J,N,Wf)
 
     end
 
-    sub_Q = [sub_q ; sub_qd ; sub_qdd];
+    sub_Q = [sub_q ; sub_qd ; sub_qdd];  % 3 * (2*N)
 
     for n=1:3
         for i=1:J
@@ -90,8 +90,14 @@ end
 
 function R = regressor_cond(X, A, t, lambda1, lambda2, regressor_red)
 
-    Q = A*X;
+    Q = A*X;  % trajectory of q, qd, qdd at all time samples.
     R = 0;
+
+    % q1_traj = zeros(length(t),1);
+    % for i=1:length(t)
+    %     q1_traj(i) = Q((i-1)*18+1);
+    % end
+    % plot(t, q1_traj);
 
     for k=1:length(t)
         [ddq1, ddq2, ddq3, ddq4, ddq5, ddq6, ...

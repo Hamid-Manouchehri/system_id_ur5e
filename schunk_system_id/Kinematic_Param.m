@@ -16,6 +16,7 @@ function [ddq1, ddq2, ddq3, ddq4, ddq5, ddq6, ...
  
  
     %%%Rotation matrices
+    % traj is arrays of q, qd, and qdd at one sample time.
     q1 = traj(1);
     q2 = traj(2);
     q3 = traj(3);

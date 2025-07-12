@@ -1,27 +1,34 @@
-function [ddq1, ddq2, ddq3, ddq4, ddq5, ddq6, ...
-    R_10xx, R_10xy, R_10xz, R_10yx, R_10yy, R_10yz, R_10zx, R_10zy, R_10zz, ... 
-    R_21xx, R_21xy, R_21xz, R_21yx, R_21yy, R_21yz, R_21zx, R_21zy, R_21zz, ...
-    R_32xx, R_32xy, R_32xz, R_32yx, R_32yy, R_32yz, R_32zx, R_32zy, R_32zz, ...
-    R_43xx, R_43xy, R_43xz, R_43yx, R_43yy, R_43yz, R_43zx, R_43zy, R_43zz, ...
-    R_54xx, R_54xy, R_54xz, R_54yx, R_54yy, R_54yz, R_54zx, R_54zy, R_54zz, ...
-    R_65xx, R_65xy, R_65xz, R_65yx, R_65yy, R_65yz, R_65zx, R_65zy, R_65zz, ...
-    ddp1_x, ddp1_y, ddp1_z, ddp2_x, ddp2_y, ddp2_z, ddp3_x, ddp3_y, ddp3_z, ...
-    ddp4_x, ddp4_y, ddp4_z, ddp5_x, ddp5_y, ddp5_z, ddp6_x, ddp6_y, ddp6_z, ...
-    w1_x, w1_y, w1_z, w2_x, w2_y, w2_z, w3_x, w3_y, w3_z, ...
-    w4_x, w4_y, w4_z, w5_x, w5_y, w5_z, w6_x, w6_y, w6_z, ...
-    dw1_x, dw1_y, dw1_z, dw2_x, dw2_y, dw2_z, dw3_x, dw3_y, dw3_z, ...
-    dw4_x, dw4_y, dw4_z, dw5_x, dw5_y, dw5_z, dw6_x, dw6_y, dw6_z, ...
-    r01_x, r01_y, r01_z, r12_x, r12_y, r12_z, r23_x, r23_y, r23_z, ...
-    r34_x, r34_y, r34_z, r45_x, r45_y, r45_z, r56_x, r56_y, r56_z] = Kinematic_Param(traj)
+function [q1, q2, q3, q4, q5, q6, dq1, dq2, dq3, dq4, dq5, dq6, ...
+        ddq1, ddq2, ddq3, ddq4, ddq5, ddq6, ...
+        R_10xx, R_10xy, R_10xz, R_10yx, R_10yy, R_10yz, R_10zx, R_10zy, R_10zz, ... 
+        R_21xx, R_21xy, R_21xz, R_21yx, R_21yy, R_21yz, R_21zx, R_21zy, R_21zz, ...
+        R_32xx, R_32xy, R_32xz, R_32yx, R_32yy, R_32yz, R_32zx, R_32zy, R_32zz, ...
+        R_43xx, R_43xy, R_43xz, R_43yx, R_43yy, R_43yz, R_43zx, R_43zy, R_43zz, ...
+        R_54xx, R_54xy, R_54xz, R_54yx, R_54yy, R_54yz, R_54zx, R_54zy, R_54zz, ...
+        R_65xx, R_65xy, R_65xz, R_65yx, R_65yy, R_65yz, R_65zx, R_65zy, R_65zz, ...
+        ddp1_x, ddp1_y, ddp1_z, ddp2_x, ddp2_y, ddp2_z, ddp3_x, ddp3_y, ddp3_z, ...
+        ddp4_x, ddp4_y, ddp4_z, ddp5_x, ddp5_y, ddp5_z, ddp6_x, ddp6_y, ddp6_z, ...
+        w1_x, w1_y, w1_z, w2_x, w2_y, w2_z, w3_x, w3_y, w3_z, ...
+        w4_x, w4_y, w4_z, w5_x, w5_y, w5_z, w6_x, w6_y, w6_z, ...
+        dw1_x, dw1_y, dw1_z, dw2_x, dw2_y, dw2_z, dw3_x, dw3_y, dw3_z, ...
+        dw4_x, dw4_y, dw4_z, dw5_x, dw5_y, dw5_z, dw6_x, dw6_y, dw6_z, ...
+        r01_x, r01_y, r01_z, r12_x, r12_y, r12_z, r23_x, r23_y, r23_z, ...
+        r34_x, r34_y, r34_z, r45_x, r45_y, r45_z, r56_x, r56_y, r56_z] = Kinematic_Param_ur5e(traj)
  
- 
-    %%%Rotation matrices
+    % Rotation matrices
     q1 = traj(1);
     q2 = traj(2);
     q3 = traj(3);
     q4 = traj(4);
     q5 = traj(5);
     q6 = traj(6);
+
+    dq1 = traj(7);
+    dq2 = traj(8);
+    dq3 = traj(9);
+    dq4 = traj(10);
+    dq5 = traj(11);
+    dq6 = traj(12);
     
     ddq1 = traj(13);
     ddq2 = traj(14);
@@ -30,28 +37,19 @@ function [ddq1, ddq2, ddq3, ddq4, ddq5, ddq6, ...
     ddq5 = traj(17);
     ddq6 = traj(18);
 
-    l1 = 0;
-    l2 = .350;
-    l3 = .305;
-    l4 = 0;
+    % DH parameters of UR5e:
+    a_value = [0. -0.425 -0.3922 0. 0. 0.];
+    alpha_value = [pi/2 0. 0. pi/2 -pi/2 0.];
+    d_value = [0.1625 0. 0. 0.1333 0.0997 0.0996];
+    theta_value = [q1 q2 q3 q4 q5 q6];
 
-    % According to IDETC2015 paper
-    a_value = [0 l2 0 0 0 0];
-    alpha_value = [pi/2 pi pi/2 -pi/2 pi/2 0];
-    d_value = [0 0 0 l3 0 0];
-    theta_value = [q1 q2+pi/2 q3+pi/2 q4 q5 q6];
-
+    % Standard transformation matrix from frame (i) to frame (i-1)
     T = zeros(4*6,4);
     for i=1:6
-        a = a_value(i);
-        alpha = alpha_value(i);
-        d = d_value(i);
-        theta = theta_value(i);
-
-        A = [ cos(theta) , -sin(theta)*cos(alpha) , sin(theta)*sin(alpha) , a*cos(theta);
-          sin(theta) , cos(theta)*cos(alpha) , -cos(theta)*sin(alpha) , a*sin(theta);
-          0          , sin(alpha)            , cos(alpha)             , d;
-          0          , 0                     , 0                      , 1];
+        A = [ cos(theta_value(i)) ,-sin(theta_value(i))*cos(alpha_value(i)) ,sin(theta_value(i))*sin(alpha_value(i))  ,a_value(i)*cos(theta_value(i));
+              sin(theta_value(i)) ,cos(theta_value(i))*cos(alpha_value(i))  ,-cos(theta_value(i))*sin(alpha_value(i)) ,a_value(i)*sin(theta_value(i));
+              0                   ,sin(alpha_value(i))                      ,cos(alpha_value(i))                      ,d_value(i);
+              0                   ,0                                        ,0                                        ,1];
 
         T(4*(i-1)+1:4*i,:) = A;
     end
@@ -94,8 +92,7 @@ function [ddq1, ddq2, ddq3, ddq4, ddq5, ddq6, ...
     R_65zx = R(3,1); R_65zy = R(3,2); R_65zz = R(3,3);
     
     
-    %%% Displacement between frame i-1 and i
-
+    % Displacement between frame i-1 and i
     r01_x = T(1,4);
     r01_y = T(2,4);
     r01_z = T(3,4);
@@ -120,8 +117,7 @@ function [ddq1, ddq2, ddq3, ddq4, ddq5, ddq6, ...
     r56_y = T(22,4);
     r56_z = T(23,4);
     
-    %%% Linear accelerations, angular velocities and accelerations
-    
+    % Linear accelerations, angular velocities and accelerations
     w = zeros(3,6);
     wdot = zeros(3,6);
     pddot = zeros(3,6);
@@ -172,7 +168,5 @@ function [ddq1, ddq2, ddq3, ddq4, ddq5, ddq6, ...
     dw4_x = wdot(1,4); dw4_y = wdot(2,4); dw4_z = wdot(3,4);
     dw5_x = wdot(1,5); dw5_y = wdot(2,5); dw5_z = wdot(3,5);
     dw6_x = wdot(1,6); dw6_y = wdot(2,6); dw6_z = wdot(3,6);
-    
-
-    
+       
 end

@@ -32,22 +32,26 @@ clc;
 clear; 
 close all;
 
+name_of_traj_file = "exciting_traj_test.csv";  % TODO
+path_to_save_traj = "/home/hamid/projects/system_id_ur5e/data/traj/";
+opt_traj_file = fullfile(path_to_save_traj, name_of_traj_file);
+
 % Load the symbolic regressor
 tmp   = load('../data/mat/Y_sym.mat','Y_sym');
 Y_sym = tmp.Y_sym;
-Y_fun = @Y_fun;
+Y_fun = @Y_fun;  % Y_fun(q', dq', ddq'); q, dq, and ddq are column vectors
 
 X = [];
-
-dt = 1;
-T = 5;
 
 Wf = 2*pi/10;
 N = 4;     % number of frequences
 J = 6;     % number of joints
-t = 0:dt:T;
 lambda1 = 1;
 lambda2 = 1;
+
+dt = 0.005;
+T = 20;
+t = linspace(0,T,1/dt);
 
 x0 = ones(J*2*N,1);
 A = [];
@@ -58,9 +62,9 @@ end
 
 % fmincon(fun,x0,A,b,Aeq,beq,lb,ub,nonlcon,options)
 
-Q_max = [140*ones(6,1) ; 70*ones(6,1) ; 50*ones(6,1)]*pi/180;
+Q_max = [360*ones(6,1) ; 180*ones(6,1) ; 180*ones(6,1)]*pi/180;
 Q_max = repmat(Q_max,2*length(t),1);
-objFun = @(x) regressor_cond(x, A, t, lambda1, lambda2, Y_sym);
+objFun = @(x) regressor_cond(x, A, t, lambda1, lambda2, Y_fun);
 
 opts = optimoptions('fmincon', ...
     'Algorithm','sqp', ...
@@ -76,7 +80,6 @@ opts = optimoptions('fmincon', ...
 [x,fval,exitflag] = fmincon(objFun,x0,[A;-A],Q_max,[],[],[],[],[],opts);
 
 A = [];
-t = 0:0.05:T;
 
 for i = 1:length(t)
     A = [A ; cal_A(t(i),J,N,Wf)];
@@ -84,14 +87,32 @@ end
 
 Q = A*x;
 
-figure;
+disp("saving optimal trajectory...");
 
-plot(t,Q(1:18:end),'b'); hold on;
-plot(t,Q(2:18:end),'r');
-plot(t,Q(3:18:end),'g');
-plot(t,Q(4:18:end),'k');
-plot(t,Q(5:18:end),'c');
-plot(t,Q(6:18:end),'m');
+Ns = length(t);
+q1_opt = Q(1:18:end);
+q2_opt = Q(2:18:end);
+q3_opt = Q(3:18:end);
+q4_opt = Q(4:18:end);
+q5_opt = Q(5:18:end);
+q6_opt = Q(6:18:end);
+Q_opt = [q1_opt, q2_opt, q3_opt, q4_opt, q5_opt, q6_opt];
+
+traj_data = [t(:), Q_opt];
+fid = fopen(opt_traj_file,'w');
+fprintf(fid,'time,q1,q2,q3,q4,q5,q6\n');  % add header
+fclose(fid);
+writematrix(traj_data, opt_traj_file, 'WriteMode','append');
+
+
+% plotting exciting trajectory
+figure;
+plot(t,q1_opt,'b'); hold on;
+plot(t,q2_opt,'r');
+plot(t,q3_opt,'g');
+plot(t,q4_opt,'k');
+plot(t,q5_opt,'c');
+plot(t,q6_opt,'m');
 
 %%% Construct A matrix (can be used for trajectory generation 
 
@@ -121,13 +142,21 @@ function A = cal_A(t,J,N,Wf)
     end
 end
 
-function R = regressor_cond(X, A, t, lambda1, lambda2, Y_sym)
+function R = regressor_cond(X, A, t, lambda1, lambda2, Y_fun)
 
     Q = A*X;
     R = 0;
 
+    % q1_traj = zeros(length(t),1);
+    % for i=1:length(t)
+    %     q1_traj(i) = Q((i-1)*18+1);
+    % end
+    % plot(t, q1_traj);
+
     for k=1:length(t)
-        [ddq1, ddq2, ddq3, ddq4, ddq5, ddq6, ...
+        [q1, q2, q3, q4, q5, q6, ...
+        dq1, dq2, dq3, dq4, dq5, dq6, ...
+        ddq1, ddq2, ddq3, ddq4, ddq5, ddq6, ...
         R_10xx, R_10xy, R_10xz, R_10yx, R_10yy, R_10yz, R_10zx, R_10zy, R_10zz, ... 
         R_21xx, R_21xy, R_21xz, R_21yx, R_21yy, R_21yz, R_21zx, R_21zy, R_21zz, ...
         R_32xx, R_32xy, R_32xz, R_32yx, R_32yy, R_32yz, R_32zx, R_32zy, R_32zz, ...
@@ -141,14 +170,15 @@ function R = regressor_cond(X, A, t, lambda1, lambda2, Y_sym)
         dw1_x, dw1_y, dw1_z, dw2_x, dw2_y, dw2_z, dw3_x, dw3_y, dw3_z, ...
         dw4_x, dw4_y, dw4_z, dw5_x, dw5_y, dw5_z, dw6_x, dw6_y, dw6_z, ...
         r01_x, r01_y, r01_z, r12_x, r12_y, r12_z, r23_x, r23_y, r23_z, ...
-        r34_x, r34_y, r34_z, r45_x, r45_y, r45_z, r56_x, r56_y, r56_z] = Kinematic_Param(Q( (k-1)*18+1 : (k-1)*18+18 ));
+        r34_x, r34_y, r34_z, r45_x, r45_y, r45_z, r56_x, r56_y, r56_z] = Kinematic_Param_ur5e(Q( (k-1)*18+1 : (k-1)*18+18 ));
 
-        Y_num = subs(Y_sym);
-        Y_num = eval(Y_num);
+        Y_num = Y_fun([q1,q2,q3,q4,q5,q6]',...
+                      [dq1,dq2,dq3,dq4,dq5,dq6]',...
+                      [ddq1,ddq2,ddq3,ddq4,ddq5,ddq6]');
         s = svd(Y_num);
         R = R + ( lambda1*cond(Y_num) + lambda2/( s(nnz(s))) );
 
     end
-    disp(['R = ' num2str(R)])
+    % disp(['R = ' num2str(R)])
 end
 
