@@ -32,10 +32,20 @@ with the software or the use or other dealings in the software.
 import numpy as np
 import os, csv, time, yaml, argparse
 from ur5e_rtde import get_receive_interface, get_control_interface
-from ur5e_rtde._modules import ur5e_homming, setup_configuration
+from ur5e_rtde._modules import ur5e_homming, setup_configuration, read_csv_trajectory
 
 rtde_recv_iface = get_receive_interface()
 rtde_ctrl_iface = get_control_interface()  
+
+with open("../config/config.yml", "r") as f:
+    cfg = yaml.safe_load(f)
+
+EXCITING_TRAJ_FILE = cfg['DATA']['EXCITING_TRAJ_FILE']
+
+FREQUENCY   = 50               # Hz (UR5e RTDE max ~125 Hz) TODO
+DT          = 1.0 / FREQUENCY   # seconds per control step
+LOOKAHEAD   = 0.1               # seconds for look-ahead interpolation
+GAIN        = 300               # servoJ gain
 
 if __name__ == "__main__":
 
@@ -43,8 +53,8 @@ if __name__ == "__main__":
     parser.add_argument(
         "action",
         nargs="?",
-        choices=["home", "setup_config", "random"],
-        default="home",
+        choices=["home", "setup_config", "random", "exciting_traj"],
+        default="home",  # TODO
         help="Specify the action to perform: 'home' or 'setup_config' (defaults to 'home')."
     )
     args = parser.parse_args()
@@ -70,6 +80,29 @@ if __name__ == "__main__":
             
             ur5e_homming(speed=0.5, accel=0.5)
 
+        elif args.action == "exciting_traj":
+            traj = read_csv_trajectory(EXCITING_TRAJ_FILE)
+            print(traj)
+            if not traj:
+                raise RuntimeError("No trajectory points loaded!")
+            
+            start_time = time.time()
+            for idx, (t_des, q_des) in enumerate(traj):
+                t0 = time.time()
+
+                # send the next joint-target
+                rtde_ctrl_iface.moveJ(q_des, speed=0.1, acceleration=0.1)
+
+                # (optional) read back current pose for logging/debug
+                actual_q = rtde_recv_iface.getActualQ()
+                # print(f"{t_des:.3f} | desired: {q_des} | actual: {[round(a,3) for a in actual_q]}")
+
+                # enforce real-time pacing
+                dt = time.time() - t0
+                if dt < DT:
+                    time.sleep(DT - dt)
+
+
         print("Robot stopped.")
 
     except Exception as e:
@@ -78,3 +111,4 @@ if __name__ == "__main__":
     finally:
         # Ensure the connection is closed
         rtde_ctrl_iface.disconnect()
+        rtde_recv_iface.disconnect()

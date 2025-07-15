@@ -1,3 +1,6 @@
 UR5E:
   ROBOT_ID: "192.168.1.100"
-  LOG_RATE_HZ: 100
+  LOG_RATE_HZ: 50
+
+DATA:
+  EXCITING_TRAJ_FILE: "/home/hamid/projects/system_id_ur5e/data/traj/exciting_traj_test.csv"

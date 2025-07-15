@@ -20,13 +20,19 @@ x0 = ones(J*2*N,1);
 A = [];
 
 for i=1:length(t)
-    A = [A ; cal_A(t(i),J,N,Wf)];  % (3*J*#time_samples) * (2*N*J) ----> 3 represents 3 set of states (q, qd, qdd) and 2 is for a_i and b_i
+    A = [A ; cal_A(t(i),J,N,Wf)];  % (3*J*#time_samples) * (2*N*J) ----> 3 represents 3 sets of states (q, qd, qdd) and 2 is for a_i and b_i
 end
 
 % fmincon(fun,x0,A,b,Aeq,beq,lb,ub,nonlcon,options)
 
-Q_max = [140*ones(6,1) ; 70*ones(6,1) ; 50*ones(6,1)]*pi/180;
-Q_max = repmat(Q_max,2*length(t),1);
+Q_max = [140*ones(6,1) ; 70*ones(6,1) ; 50*ones(6,1)]*pi/180;  % dim: 18*1
+Q_min = [-140*ones(6,1) ; 70*ones(6,1) ; 50*ones(6,1)]*pi/180;  % dim: 18*1
+Q_max1 = repmat(Q_max,2*length(t),1);  % dim: (2*18*#time_samples) * 1
+
+
+Q_max = [140*ones(6,1) ; 70*ones(6,1) ; 50*ones(6,1)]*pi/180;  % dim: 18*1
+Q_max2 = repmat(Q_max,2*length(t),1);  % dim: (2*18*#time_samples) * 1
+
 objFun = @(x) regressor_cond(x, A, t, lambda1, lambda2, regressor_red);
 
 opts = optimoptions('fmincon', ...

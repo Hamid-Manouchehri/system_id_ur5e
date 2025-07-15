@@ -40,7 +40,7 @@ with open("../config/config.yml", "r") as f:
 
 LOG_RATE_HZ = cfg['UR5E']['LOG_RATE_HZ']
 
-csv_file_name = "ur5e_data_swing_elbow_100.csv"  # TODO
+csv_file_name = "ur5e_data_test.csv"  # TODO
 csv_dir = '../data/logs/'
 os.makedirs(csv_dir, exist_ok=True)
 

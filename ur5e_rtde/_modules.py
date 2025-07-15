@@ -32,6 +32,7 @@ import numpy as np
 import rtde_control
 import rtde_receive
 import yaml
+import csv
 from ur5e_rtde import get_receive_interface, get_control_interface
 
 rtde_recv_iface = get_receive_interface()
@@ -55,3 +56,14 @@ def ur5e_homming(speed=0.1, accel=0.5):
 def setup_configuration(speed=0.1, accel=0.5):
     joint_setup_position = np.array([1.40706, -1.31536, 1.61768, -1.85297, 4.708, -3.28425])  # Rad
     rtde_ctrl_iface.moveJ(joint_setup_position, speed=speed, acceleration=accel)
+
+
+def read_csv_trajectory(path):
+    traj = []
+    with open(path, newline='') as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            t = float(row['time'])
+            q = [float(row[f'q{i}']) for i in range(1,7)]
+            traj.append((t, q))
+    return traj

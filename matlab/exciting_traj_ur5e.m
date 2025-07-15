@@ -60,12 +60,20 @@ for i=1:length(t)
     A = [A ; cal_A(t(i),J,N,Wf)];
 end
 
-% fmincon(fun,x0,A,b,Aeq,beq,lb,ub,nonlcon,options)
+q_min   = [-360 -180 -90 -180 -90 -360]';  % in deg; [q1_min q2_min q3_min q4_min q5_min q6_min]'
+q_max   = [ 360   0.  90  0    90  360]';  % in deg; 
+dq_max  = [180 180 180 180 180 180]';
+ddq_max = [180 180 180 180 180 180]';
 
-Q_max = [360*ones(6,1) ; 180*ones(6,1) ; 180*ones(6,1)]*pi/180;
-Q_max = repmat(Q_max,2*length(t),1);
+Q_max = [q_max; dq_max; ddq_max]*pi/180;  % in rad
+Q_min = [q_min; dq_max; ddq_max]*pi/180;  % in rad
+Q_total = repmat([Q_max;-Q_min],length(t),1);
 objFun = @(x) regressor_cond(x, A, t, lambda1, lambda2, Y_fun);
 
+Ain = [A;-A]; bin = Q_total;
+Aeq = [];     beq = [];
+lb  = [];     ub  = [];
+nonlcon = [];
 opts = optimoptions('fmincon', ...
     'Algorithm','sqp', ...
     'Display','iter', ...
@@ -77,7 +85,7 @@ opts = optimoptions('fmincon', ...
                 @optimplotstepsize, ...       % step size
                 @optimplotconstrviolation }); % max constraint violation);
 
-[x,fval,exitflag] = fmincon(objFun,x0,[A;-A],Q_max,[],[],[],[],[],opts);
+[x,fval,exitflag] = fmincon(objFun,x0,Ain,bin,Aeq,beq,lb,ub,nonlcon,opts);
 
 A = [];
 
