@@ -49,7 +49,7 @@ J = 6;     % number of joints
 lambda1 = 1;
 lambda2 = 1;
 
-dt = 0.005;
+dt = 0.05;
 T = 20;
 t = linspace(0,T,1/dt);
 
@@ -69,6 +69,7 @@ Q_max = [q_max; dq_max; ddq_max]*pi/180;  % in rad
 Q_min = [q_min; dq_max; ddq_max]*pi/180;  % in rad
 Q_total = repmat([Q_max;-Q_min],length(t),1);
 objFun = @(x) regressor_cond(x, A, t, lambda1, lambda2, Y_fun);
+% Qdd_max for UR5e: 13 rad/s^2 
 
 Ain = [A;-A]; bin = Q_total;
 Aeq = [];     beq = [];

@@ -62,7 +62,7 @@ if __name__ == "__main__":
     try:
             
         if args.action == "home":
-            ur5e_homming(speed=0.5, accel=0.5)
+            ur5e_homming(speed=1, accel=1)
 
         elif args.action == "setup_config":
             setup_configuration(speed=0.5, accel=0.5)
@@ -82,7 +82,6 @@ if __name__ == "__main__":
 
         elif args.action == "exciting_traj":
             traj = read_csv_trajectory(EXCITING_TRAJ_FILE)
-            print(traj)
             if not traj:
                 raise RuntimeError("No trajectory points loaded!")
             
@@ -98,9 +97,9 @@ if __name__ == "__main__":
                 # print(f"{t_des:.3f} | desired: {q_des} | actual: {[round(a,3) for a in actual_q]}")
 
                 # enforce real-time pacing
-                dt = time.time() - t0
-                if dt < DT:
-                    time.sleep(DT - dt)
+                # dt = time.time() - t0
+                # if dt < DT:
+                #     time.sleep(DT - dt)
 
 
         print("Robot stopped.")
