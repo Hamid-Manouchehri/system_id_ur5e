@@ -29,7 +29,7 @@ with the software or the use or other dealings in the software.
 
 clc; clear; close all
 
-csv_file_name = 'ur5e_smooth_random_joint_traj_v1.csv';  % TODO, 10 is logging freq
+csv_file_name = 'ur5e_smooth_random_joint_traj_test.csv';  % TODO, 10 is logging freq
 csv_dir = '/home/hamid/projects/system_id_ur5e/data/logs/';
 
 fullfile = fullfile(csv_dir, csv_file_name);
@@ -50,7 +50,8 @@ qActualCurrent = data(:,32:37);  % actual_current, [I1, I2, …, I6] in mA
 qOutputCurrent = data(:,38:43);  % joint_control_output, [I1, I2, …, I6] in mA
 tcpForce       = data(:,44:49);  % actual_TCP_force, [Fx, Fy, Fz, Tx, Ty, Tz]
 targetMoment   = data(:,50:55);  % target_moment, [T1, T2, ..., T6] in Nm
-qTemperature   = data(:,56:end); % joint_temperatures [t1, t2, ..., t6] in degrees Celsius
+qTemperature   = data(:,56:61); % joint_temperatures [t1, t2, ..., t6] in degrees Celsius
+torques        = data(:,62:end); % get_joint_torques [τ₁, τ₂, τ₃, τ₄, τ₅, τ₆] in Nm
 
 
 
@@ -69,7 +70,7 @@ plotJointOutputCurrents(time, qOutputCurrent)
 % plotTCPForces(time, tcpForce);
 plotTargetMoment(time, targetMoment);
 % plotJointTemperatures(time, qTemperature);
-
+plotJointTorques(time, torques)
 
 
 
@@ -261,3 +262,19 @@ function plotJointTemperatures(time, qTemp)
 end
 
 
+function plotJointTorques(time, tau)
+%   tcpForce: Nx6 [temp1 temp2 temp3 temp4 temp5 temp6]
+
+    labels = {'tau_1','tau_2','tau_3','tau_4','tau_5','tau_6'};
+    figure;
+    hold on;
+    for k = 1:6
+        plot(time, tau(:,k), 'LineWidth',1.5);
+    end
+    hold off;
+    xlabel('Time (s)','FontSize',12);
+    ylabel('Joint Torques (Nm)','FontSize',12);
+    legend(labels,'Location','best');
+    grid on;
+    title('joint\_torques','FontSize',14);
+end

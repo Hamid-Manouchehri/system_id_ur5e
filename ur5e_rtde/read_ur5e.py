@@ -31,9 +31,10 @@ with the software or the use or other dealings in the software.
 #!/usr/bin/env python3
 
 import os, csv, time, yaml
-from ur5e_rtde import get_receive_interface
+from ur5e_rtde import get_receive_interface, get_control_interface
 
 rtde_recv_iface = get_receive_interface()
+rtde_ctrl_iface = get_control_interface()
 
 with open("../config/config.yml", "r") as f:
     cfg = yaml.safe_load(f)
@@ -55,18 +56,19 @@ with open(csv_path, "w", newline="") as csvf:
                      "qdd1", "qdd2", "qdd3", "qdd4", "qdd5", "qdd6",
                      "x", "y", "z", "R_x", "R_y", "R_z",
                      "V_x", "V_y", "V_z", "omega_x", "omega_y", "omega_z",
+                     "F_x", "F_y", "F_z", "T_x", "T_y", "T_z",
                      "actualI1", "actualI2", "actualI3", "actualI4", "actualI5", "actualI6",
                      "outputI1", "outputI2", "outputI3", "outputI4", "outputI5", "outputI6",
-                     "F_x", "F_y", "F_z", "T_x", "T_y", "T_z",
                      "tau1", "tau2", "tau3", "tau4", "tau5", "tau6",
-                     "temp1", "temp2", "temp3", "temp4", "temp5", "temp6"])
+                     "temp1", "temp2", "temp3", "temp4", "temp5", "temp6", 
+                     "tau1", "tau2", "tau3", "tau4", "tau5", "tau6"])
     t0 = time.time()
 
     try:
         print("\n\nReading data from UR5e and saving as a CSV file...\n\n")
         while True:
             loop_start = time.time()
-            
+
             # ts  = time.time() - t0
             ts = rtde_recv_iface.getTimestamp()                        # timestamp in s
             qs  = rtde_recv_iface.getActualQ()                         # actual_q, [q₁,…,q₆] in rad
@@ -74,11 +76,12 @@ with open(csv_path, "w", newline="") as csvf:
             qddsTarget = rtde_recv_iface.getTargetQdd()                # target_qdd, [qdd1, qdd2, ..., qdd6] in rad/s^2
             tcpPose = rtde_recv_iface.getActualTCPPose()               # actual_TCP_pose, [x,y,z, Rx, Ry, Rz]
             tcpSpeed = rtde_recv_iface.getActualTCPSpeed()             # actual_TCP_speed, [vx, vy, vz, ωx, ωy, ωz]
+            tcpForce = rtde_recv_iface.getActualTCPForce()             # actual_TCP_force, [Fx, Fy, Fz, Tx, Ty, Tz]
             qCurrent = rtde_recv_iface.getActualCurrent()              # actual_current, [I1, I2, …, I6] in mA
             qControlCurrent = rtde_recv_iface.getJointControlOutput()  # joint_control_output, [I1, I2, …, I6] in mA
-            tcpForce = rtde_recv_iface.getActualTCPForce()             # actual_TCP_force, [Fx, Fy, Fz, Tx, Ty, Tz]
             targetMoment = rtde_recv_iface.getTargetMoment()           # target_moment, [T1, T2, ..., T6] in Nm
             qTemperatures = rtde_recv_iface.getJointTemperatures()     # joint_temperatures [t1, t2, ..., t6] in degrees Celsius
+            torques = rtde_ctrl_iface.getJointTorques()                # get_joint_torques [τ₁, τ₂, τ₃, τ₄, τ₅, τ₆] in Nm
 
             # write it out:
             writer.writerow([f"{ts:.4f}"] + 
@@ -87,11 +90,12 @@ with open(csv_path, "w", newline="") as csvf:
                             [f"{v:.4f}" for v in qddsTarget] + 
                             [f"{v:.4f}" for v in tcpPose] +
                             [f"{v:.4f}" for v in tcpSpeed] +
+                            [f"{v:.4f}" for v in tcpForce] + 
                             [f"{v:.4f}" for v in qCurrent] +
                             [f"{v:.4f}" for v in qControlCurrent] +
-                            [f"{v:.4f}" for v in tcpForce] + 
                             [f"{v:.4f}" for v in targetMoment] + 
-                            [f"{v:.4f}" for v in qTemperatures])
+                            [f"{v:.4f}" for v in qTemperatures] +
+                            [f"{v:.4f}" for v in torques])
             csvf.flush()
 
             # sleep to enforce rate

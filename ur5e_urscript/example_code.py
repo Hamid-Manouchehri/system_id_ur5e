@@ -17,11 +17,10 @@ SECONDARY_PORT = cfg['UR5E']['SECONDARY_PORT']
 REALTIME_PORT = cfg['UR5E']['REALTIME_PORT']
 
 # URScript command being sent to the robot
-urscript_command_1 = "set_digital_out(1, False)"
-# urscript_command_2 = "movej([1.57, -1.57, 1.57, -1.57, 1.57, 0], a=0.4, v=0.5)"
+# urscript_command = "set_digital_out(1, False)"
+urscript_command_home_config = "movej([0., -1.57, 0., -1.57, 0., 0], a=0.4, v=0.5)"
+urscript_command_random_config = "movej([1.57, -1.57, 1.57, -1.57, 1.57, 0], a=0.4, v=0.5)"
 
-
-new_line = "\n"
 
 def send_urscript_command(command: str):
     """
@@ -35,7 +34,7 @@ def send_urscript_command(command: str):
         s.connect((ROBOT_IP, PRIMARY_PORT))
 
         # Appends new line to the URScript command (the command will not execute without this)
-        command = command+new_line
+        command = command + "\n"
         
         # Send the command
         s.sendall(command.encode('utf-8'))
@@ -46,4 +45,5 @@ def send_urscript_command(command: str):
     except Exception as e:
         print(f"An error occurred: {e}")
 
-send_urscript_command(urscript_command_1)
+send_urscript_command(urscript_command_home_config)
+# send_urscript_command(urscript_command_random_config)
