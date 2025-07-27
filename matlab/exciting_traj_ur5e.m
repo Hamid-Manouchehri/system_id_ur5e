@@ -32,16 +32,15 @@ clc;
 clear; 
 close all;
 
-name_of_traj_file = "exciting_traj_test.csv";  % TODO
-path_to_save_traj = "/home/hamid/projects/system_id_ur5e/data/traj/";
-opt_traj_file = fullfile(path_to_save_traj, name_of_traj_file);
-
 % Load the symbolic regressor
 tmp   = load('../data/mat/Y_sym.mat','Y_sym');
 Y_sym = tmp.Y_sym;
 Y_fun = @Y_fun;  % Y_fun(q', dq', ddq'); q, dq, and ddq are column vectors
 
-X = [];
+% Saving optimized exciting trajectory
+name_of_traj_file = "exciting_traj_test.csv";  % TODO
+path_to_save_traj = "/home/hamid/projects/system_id_ur5e/data/traj/";
+opt_traj_file = fullfile(path_to_save_traj, name_of_traj_file);
 
 Wf = 2*pi/10;
 N = 4;     % number of frequences

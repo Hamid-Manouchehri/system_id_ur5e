@@ -1,13 +1,14 @@
-"""
+%{
 *******************************************************************************
-
 Project: system-id ur5e
-File: __init__.py
+File: pi_estimation.m
 Author: Hamid Manouchehri
 Email: hmanouch@buffalo.edu
-Date: May 11, 2025
+Date: July 25, 2025
 
-Description: -
+Description:
+Script for estimating pi (tau = Y(q,qd,qdd)*pi) according to the generated 
+trajectory.
 
 License:
 This script is licensed under the MIT License.
@@ -25,31 +26,31 @@ action of contract, tort, or otherwise, arising from, out of, or in connection
 with the software or the use or other dealings in the software.
 
 *******************************************************************************
-"""
+%}
+clc; clear; close all;
 
-import os, yaml, rtde_receive, rtde_control
+% Load the symbolic regressor
+tmp   = load('../data/mat/Y_sym.mat','Y_sym');
+Y_sym = tmp.Y_sym;
+Y_fun = @Y_fun;  % Y_fun(q', dq', ddq'); q, dq, and ddq are column vectors
 
-_pkg_dir = os.path.dirname(__file__)
-_cfg_path = os.path.abspath(os.path.join(_pkg_dir, '..', 'config', 'config.yml'))
+joint_traj_file = 'ur5e_smooth_random_joint_traj_1.csv';  % TODO
+Joint_traj_dir  = '../data/logs/';
+csvFile = fullfile(Joint_traj_dir, joint_traj_file);
 
-with open(_cfg_path) as f:
-    _cfg = yaml.safe_load(f)
+% [ur5e_data, header] = readmatrix(csvFile, 'OutputType','double');
 
-ROBOT_ID = _cfg['UR5E']['ROBOT_IP']
+C = readcell(csvFile);
+header_ur5e_data = C(1,:);
+ur5e_data = cell2mat(C(2:end,:));
 
-_rtde_recv = None
-_rtde_ctrl = None
+logged_actual_q = ur5e_data(:,2:7);
+logged_actual_qd = ur5e_data(:,8:13);
+logged_target_qdd = ur5e_data(:,14:19);
 
-def get_receive_interface():
-    """Always safe to call from multiple scripts."""
-    global _rtde_recv
-    if _rtde_recv is None:
-        _rtde_recv = rtde_receive.RTDEReceiveInterface(ROBOT_ID)
-    return _rtde_recv
 
-def get_control_interface():
-    """Only call this if you actually need to send commands."""
-    global _rtde_ctrl
-    if _rtde_ctrl is None:
-        _rtde_ctrl = rtde_control.RTDEControlInterface(ROBOT_ID)
-    return _rtde_ctrl
+
+
+
+% Y_fun_actual = Y_fun();
+% Y_fun_ = Y_fun();

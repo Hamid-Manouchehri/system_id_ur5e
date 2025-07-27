@@ -29,7 +29,7 @@ with the software or the use or other dealings in the software.
 
 clc; clear; close all
 
-csv_file_name = 'ur5e_data_swing_elbow_100.csv';  % TODO, 10 is logging freq
+csv_file_name = 'ur5e_smooth_random_joint_traj_v1.csv';  % TODO, 10 is logging freq
 csv_dir = '/home/hamid/projects/system_id_ur5e/data/logs/';
 
 fullfile = fullfile(csv_dir, csv_file_name);
@@ -59,9 +59,9 @@ qTemperature   = data(:,56:end); % joint_temperatures [t1, t2, ..., t6] in degre
 
 
 
-% plotJointPositions(time, qs);
-% plotJointVelocities(time, qds);
-% plotTargetJointAccelerations(time, qdds);
+plotJointPositions(time, qs);
+plotJointVelocities(time, qds);
+plotTargetJointAccelerations(time, qdds);
 % plotTCPPose(time, tcpPose);
 % plotTCPSpeed(time, tcpSpeed);
 plotJointActualCurrents(time, qActualCurrent);
