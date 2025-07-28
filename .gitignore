@@ -16,3 +16,4 @@ schunk_system_id/*.asv
 schunk_system_id/*.asv
 mathworks-robotics-intelligent-bin-picking-example-with-simulink-2.1.0.0/
 matlab/*.png
+ur5e_rtde/test.py

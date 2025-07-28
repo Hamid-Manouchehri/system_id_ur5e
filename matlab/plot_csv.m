@@ -29,7 +29,7 @@ with the software or the use or other dealings in the software.
 
 clc; clear; close all
 
-csv_file_name = 'ur5e_smooth_random_joint_traj_test.csv';  % TODO, 10 is logging freq
+csv_file_name = 'ur5e_log.csv';  % TODO, 10 is logging freq
 csv_dir = '/home/hamid/projects/system_id_ur5e/data/logs/';
 
 fullfile = fullfile(csv_dir, csv_file_name);
@@ -60,15 +60,15 @@ torques        = data(:,62:end); % get_joint_torques [τ₁, τ₂, τ₃, τ₄
 
 
 
-plotJointPositions(time, qs);
-plotJointVelocities(time, qds);
-plotTargetJointAccelerations(time, qdds);
+% plotJointPositions(time, qs);
+% plotJointVelocities(time, qds);
+% plotTargetJointAccelerations(time, qdds);
 % plotTCPPose(time, tcpPose);
 % plotTCPSpeed(time, tcpSpeed);
-plotJointActualCurrents(time, qActualCurrent);
-plotJointOutputCurrents(time, qOutputCurrent)
+% plotJointActualCurrents(time, qActualCurrent);
+% plotJointOutputCurrents(time, qOutputCurrent)
 % plotTCPForces(time, tcpForce);
-plotTargetMoment(time, targetMoment);
+% plotTargetMoment(time, targetMoment);
 % plotJointTemperatures(time, qTemperature);
 plotJointTorques(time, torques)
 
