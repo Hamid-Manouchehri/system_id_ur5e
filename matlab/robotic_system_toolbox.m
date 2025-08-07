@@ -30,12 +30,10 @@ with the software or the use or other dealings in the software.
 %}
 clc; clear; close all;
 
-trajFile = 'ur5e_smooth_random_joint_traj_v1_test.csv';
+trajFile = 'ur5e_smooth_random_joint_traj_v1.csv';
 trajDir  = '../data/traj';
 csvTraj = fullfile(trajDir, trajFile);
 [hdr, tTraj, qTraj] = readCSVFile(csvTraj);
-
-lasjkfd
 
 ur5e_model = loadrobot("universalUR5e");
 ur5e_model.DataFormat = 'row';
@@ -58,52 +56,62 @@ show(ur5e_model, qUpRight, ...
      'Visuals','off');
 title('UR5e Upright Home Configuration');
 
-t_final = 10;
-fs = 100;
-t = linspace(0, t_final, t_final*fs)';
-
-% create a smooth trajectory for 6 joints
 currentq = ur5eJointAnglesRad(ur5e_model, qUpRight);
 
-q1_traj = currentq(1) + sin(2*pi*0.1*t);
-q2_traj = currentq(2) + 0. * t;
-q3_traj = currentq(3) + 0. * t;
-q4_traj = currentq(4) + 0. * t;
-q5_traj = currentq(5) + 0. * t;
-q6_traj = currentq(6) + 0. * t;
-q_traj = [q1_traj q2_traj q3_traj q4_traj q5_traj q6_traj];
+% t_final = 10;
+% fs = 100;
+% t = linspace(0, t_final, t_final*fs)';
 
-qd1_traj = 2*pi * 0.1 * cos(2*pi*0.1*t);
-qd2_traj = 0. * t;
-qd3_traj = 0. * t;
-qd4_traj = 0. * t;
-qd5_traj = 0. * t;
-qd6_traj = 0. * t;
-qd_traj = [qd1_traj qd2_traj qd3_traj qd4_traj qd5_traj qd6_traj];
+% create a smooth trajectory for 6 joints
 
-qdd1_traj = -4*pi^2 * 0.01 * sin(2*pi*0.1*t);
-qdd2_traj = 0. * t;
-qdd3_traj = 0. * t;
-qdd4_traj = 0. * t;
-qdd5_traj = 0. * t;
-qdd6_traj = 0. * t;
-qdd_traj = [qdd1_traj qdd2_traj qdd3_traj qdd4_traj qdd5_traj qdd6_traj];
+% q1_traj = currentq(1) + sin(2*pi*0.1*t);
+% q2_traj = currentq(2) + 0. * t;
+% q3_traj = currentq(3) + 0. * t;
+% q4_traj = currentq(4) + 0. * t;
+% q5_traj = currentq(5) + 0. * t;
+% q6_traj = currentq(6) + 0. * t;
+% q_traj = [q1_traj q2_traj q3_traj q4_traj q5_traj q6_traj];
+% 
+% qd1_traj = 2*pi * 0.1 * cos(2*pi*0.1*t);
+% qd2_traj = 0. * t;
+% qd3_traj = 0. * t;
+% qd4_traj = 0. * t;
+% qd5_traj = 0. * t;
+% qd6_traj = 0. * t;
+% qd_traj = [qd1_traj qd2_traj qd3_traj qd4_traj qd5_traj qd6_traj];
+% 
+% qdd1_traj = -4*pi^2 * 0.01 * sin(2*pi*0.1*t);
+% qdd2_traj = 0. * t;
+% qdd3_traj = 0. * t;
+% qdd4_traj = 0. * t;
+% qdd5_traj = 0. * t;
+% qdd6_traj = 0. * t;
+% qdd_traj = [qdd1_traj qdd2_traj qdd3_traj qdd4_traj qdd5_traj qdd6_traj];
+
+dt = mean(diff(tTraj));                   % seconds
+qdTraj  = [zeros(1,6); diff(qTraj)/dt];        % velocity: [N x 6]
+qddTraj = [zeros(1,6); diff(qdTraj)/dt];       % acceleration: [N x 6]
 
 % inverse dynamics torques
-tau = zeros(size(q_traj));
-for i = 1:length(t)
-    q   = q_traj(i,:);
-    qd  = qd_traj(i,:);
-    qdd = qdd_traj(i,:);
+tau = zeros(size(qTraj));
+for i = 1:length(tTraj)
+    q   = qTraj(i,:);
+    qd  = qdTraj(i,:);
+    qdd = qddTraj(i,:);
     
     tau(i,:) = inverseDynamics(ur5e_model, q, qd, qdd);
 end
+
+% figure;
+% plot(tTraj, qTraj)
+% plot(tTraj, qdTraj)
+% plot(tTraj, qddTraj)
 
 % Plot joint torques
 figure;
 for j = 1:6
     subplot(3,2,j);
-    plot(t, tau(:,j),'LineWidth',1.2);
+    plot(tTraj, tau(:,j),'LineWidth',1.2);
     grid on;
     title(sprintf('Joint %d Torque',j));
     xlabel('Time [s]');
@@ -112,9 +120,9 @@ end
 
 % Visual animation of UR5e trajectory:
 figure;
-for k = 1:5:length(t)
-    show(ur5e_model, q_traj(k,:), 'PreservePlot',false,'Frames','off');
-    title(sprintf('UR5e Simulation (t=%.2fs)', t(k)));
+for k = 1:5:length(tTraj)
+    show(ur5e_model, qTraj(k,:), 'PreservePlot',false,'Frames','off');
+    title(sprintf('UR5e Simulation (t=%.2fs)', tTraj(k)));
     drawnow;
 end
 
