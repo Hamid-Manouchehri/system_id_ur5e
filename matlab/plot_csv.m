@@ -27,9 +27,9 @@ with the software or the use or other dealings in the software.
 *******************************************************************************
 %}
 
-clc; clear; close all
+clc; clear; %close all
 
-csv_file_name = 'ur5e_log.csv';  % TODO, 10 is logging freq
+csv_file_name = 'ur5e_smooth_random_joint_traj_v2.csv';  % TODO, 10 is logging freq
 csv_dir = '/home/hamid/projects/system_id_ur5e/data/logs/';
 
 fullfile = fullfile(csv_dir, csv_file_name);
@@ -60,7 +60,7 @@ torques        = data(:,62:end); % get_joint_torques [τ₁, τ₂, τ₃, τ₄
 
 
 
-plotJointPositions(time, qs);
+% plotJointPositions(time, qs);
 % plotJointVelocities(time, qds);
 % plotTargetJointAccelerations(time, qdds);
 % plotTCPPose(time, tcpPose);
@@ -68,9 +68,9 @@ plotJointPositions(time, qs);
 % plotJointActualCurrents(time, qActualCurrent);
 % plotJointOutputCurrents(time, qOutputCurrent)
 % plotTCPForces(time, tcpForce);
-% plotTargetMoment(time, targetMoment);
+plotTargetMoment(time, targetMoment);
 % plotJointTemperatures(time, qTemperature);
-plotJointTorques(time, torques)
+% plotJointTorques(time, torques)
 
 
 
@@ -192,19 +192,18 @@ end
 function plotJointOutputCurrents(time, qCurrent)
 % plotJointOutputCurrents(time, qCurrent)
 %   qCurrent: Nx6 currents in mA
-
+    
     figure;
-    hold on;
-    for k = 1:6
-        plot(time, qCurrent(:,k), 'LineWidth',1.5);
+    for j = 1:6
+        subplot(3,2,j);
+        hold on;
+        plot(time, qCurrent(:,j), 'LineWidth',1.5);
+        grid on;
+        xlabel('Time (s)','FontSize',12); 
+        ylabel(sprintf('I_{%d} [mA]', j));
     end
-    hold off;
-    xlabel('Time (s)','FontSize',12);
-    ylabel('Joint Control Currents (mA)','FontSize',12);
-    legend(arrayfun(@(k) sprintf('I_%d',k), 1:6, 'Uni',false),...
-           'Location','best');
-    grid on;
-    title('joint\_control\_output','FontSize',14);
+    sgtitle('joint\_control\_output');
+
 end
 
 
@@ -228,20 +227,19 @@ end
 
 
 function plotTargetMoment(time, targetMoment)
-%   tcpForce: Nx6 [tau1 tau2 tau3 tau4 tau5 tau6]
 
-    labels = {'tau_1','tau_2','tau_3','tau_4','tau_5','tau_6'};
     figure;
-    hold on;
-    for k = 1:6
-        plot(time, targetMoment(:,k), 'LineWidth',1.5);
+    for j = 1:6
+        subplot(3,2,j);
+        hold on;
+        plot(time, targetMoment(:,j), 'LineWidth',1.5);
+        grid on;
+        xlabel('Time (s)','FontSize',12); 
+        ylabel(sprintf('Target Moments %d [Nm]', j));
     end
-    hold off;
-    xlabel('Time (s)','FontSize',12);
-    ylabel('Target Moments (Nm)','FontSize',12);
-    legend(labels,'Location','best');
-    grid on;
-    title('target\_moments','FontSize',14);
+    sgtitle('target\_moments');
+
+
 end
 
 function plotJointTemperatures(time, qTemp)
@@ -263,18 +261,29 @@ end
 
 
 function plotJointTorques(time, tau)
-%   tcpForce: Nx6 [temp1 temp2 temp3 temp4 temp5 temp6]
 
-    labels = {'tau_1','tau_2','tau_3','tau_4','tau_5','tau_6'};
+    % param = 0.9;
+    % fs = 1/median(diff(time));  % Hz
+    % win_sec = 0.05; if nargin>=4 && ~isempty(param), win_sec = param; end
+    % w = max(3, round(win_sec*fs));
+    % tau_f = smoothdata(tau, 1, 'movmean', w); % smooth along rows
+
+    dt = median(diff(time));
+    fs = 1/dt;
+    fc = 3;                          % cutoff Hz (tune: 8–15 Hz is typical)
+    [b,a] = butter(4, fc/(fs/2));     % 4th-order Butterworth
+    tau_f = filtfilt(b,a,tau);   % zero-phase
+    
     figure;
-    hold on;
-    for k = 1:6
-        plot(time, tau(:,k), 'LineWidth',1.5);
+    for j = 1:6
+        subplot(3,2,j);
+        plot(time, tau(:,j)); 
+        hold on;
+        plot(time, tau_f(:,j), 'LineWidth', 1.5); grid on;
+        
+        xlabel('Time [s]'); 
+        ylabel(sprintf('\\tau_{%d} [Nm]', j));
+        legend({'raw','smoothed'}, 'Location','best'); % per-subplot legend
     end
-    hold off;
-    xlabel('Time (s)','FontSize',12);
-    ylabel('Joint Torques (Nm)','FontSize',12);
-    legend(labels,'Location','best');
-    grid on;
-    title('joint\_torques','FontSize',14);
+    sgtitle('UR5e Actual joint torques')
 end

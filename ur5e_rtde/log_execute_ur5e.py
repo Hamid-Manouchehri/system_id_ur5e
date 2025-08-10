@@ -31,6 +31,9 @@ with the software or the use or other dealings in the software.
 import csv, os, time, yaml
 from ur5e_rtde import get_receive_interface, get_control_interface
 
+rtde_recv_iface = get_receive_interface()
+rtde_ctrl_iface = get_control_interface()
+
 _pkg_dir = os.path.dirname(__file__)
 _cfg_path = os.path.abspath(os.path.join(_pkg_dir, '..', 'config', 'config.yml'))
 with open(_cfg_path, 'r') as f:
@@ -40,7 +43,7 @@ LOG_RATE_HZ = cfg['UR5E']['LOG_RATE_HZ']
 
 # --- trajectory loading ---
 traj_dir = os.path.join(os.path.dirname(__file__), '..', 'data', 'traj')
-csv_traj = os.path.join(traj_dir, 'ur5e_smooth_random_joint_traj_v1.csv')  # TODO
+csv_traj = os.path.join(traj_dir, 'ur5e_smooth_elbow_ninty_deg.csv')  # TODO
 trajectory = []
 with open(csv_traj, newline='') as f:
     reader = csv.DictReader(f)
@@ -52,11 +55,9 @@ with open(csv_traj, newline='') as f:
 # --- logging setup ---
 log_dir = os.path.join(os.path.dirname(__file__), '..', 'data', 'logs')
 os.makedirs(log_dir, exist_ok=True)
-log_path = os.path.join(log_dir, 'ur5e_smooth_random_joint_traj_test.csv')  # TODO
+log_path = os.path.join(log_dir, 'ur5e_smooth_elbow_ninty_deg.csv')  # TODO
 period = 1.0 / LOG_RATE_HZ
 
-rtde_recv_iface = get_receive_interface()
-rtde_ctrl_iface = get_control_interface()
 
 # move to start
 _, q0 = trajectory[0]

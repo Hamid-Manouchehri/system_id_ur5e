@@ -30,7 +30,7 @@ with the software or the use or other dealings in the software.
 %}
 clc; clear; close all;
 
-trajFile = 'ur5e_smooth_random_joint_traj_v1.csv';
+trajFile = 'ur5e_smooth_random_joint_traj_v2.csv';
 trajDir  = '../data/traj';
 csvTraj = fullfile(trajDir, trajFile);
 [hdr, tTraj, qTraj] = readCSVFile(csvTraj);
@@ -48,13 +48,6 @@ qUpRight(3) = ur5eHomeConfig(3) + qUpRight(3);
 qUpRight(4) = ur5eHomeConfig(4) + qUpRight(4);
 qUpRight(5) = ur5eHomeConfig(5) + qUpRight(5);
 qUpRight(6) = ur5eHomeConfig(6) + qUpRight(6);
-
-figure;
-show(ur5e_model, qUpRight, ...
-     'PreservePlot', false, ...
-     'Frames', 'on', ...
-     'Visuals','off');
-title('UR5e Upright Home Configuration');
 
 currentq = ur5eJointAnglesRad(ur5e_model, qUpRight);
 
@@ -108,18 +101,19 @@ end
 % plot(tTraj, qddTraj)
 
 % Plot joint torques
-figure;
+figure(1);
 for j = 1:6
     subplot(3,2,j);
     plot(tTraj, tau(:,j),'LineWidth',1.2);
     grid on;
     title(sprintf('Joint %d Torque',j));
     xlabel('Time [s]');
-    ylabel('\tau [Nm]');
+    ylabel(sprintf('\\tau_{%d} [Nm]', j));
 end
+sgtitle('UR5e Matlab Sim Joint Torques')
 
 % Visual animation of UR5e trajectory:
-figure;
+figure(2);
 for k = 1:5:length(tTraj)
     show(ur5e_model, qTraj(k,:), 'PreservePlot',false,'Frames','off');
     title(sprintf('UR5e Simulation (t=%.2fs)', tTraj(k)));

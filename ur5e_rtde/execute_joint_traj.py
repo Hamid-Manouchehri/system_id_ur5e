@@ -35,7 +35,7 @@ from ur5e_rtde import get_receive_interface, get_control_interface
 rtde_ctrl_iface = get_control_interface()
 
 # Reading the CSV joint trajectory file and executing on UR5e.
-csv_file_name = 'ur5e_smooth_random_joint_traj_v1.csv'  # TODO
+csv_file_name = 'ur5e_smooth_elbow_ninty_deg.csv'  # TODO
 csv_traj_file = "../data/traj/"
 joint_trajectory = os.path.join(csv_traj_file, csv_file_name)
 
@@ -52,8 +52,8 @@ rtde_ctrl_iface.moveJ(q0, speed=1, acceleration=.5)
 # exit()
 
 # Parameters
-speed = .1
-acceleration = .1
+speed = .005
+acceleration = .01
 lookahead_time = 0.1  # within [0.03;0.2]
 gain = 100  # within [100;2000]
 
