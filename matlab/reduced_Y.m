@@ -1,20 +1,22 @@
 
-%% find symbolic form complete regressor
+% find symbolic form complete regressor
 clc
 clear all
 
-load Y_simp;
+tmp   = load('../data/mat/Y_sym.mat','Y_sym');
+Y_sym = tmp.Y_sym;
+Y_fun = @Y_fun;
 
 % todo define trajectory and length
 nparam = 66;
 %traj_len = nparam+1;
-traj_len = 100;
+traj_len = 70;
 traj = 100*randn(traj_len,18)*pi/180; %6* q,dq,ddq
 tol = 1e-4;
 Pm = zeros(6*traj_len,nparam);
 
 
-%% subs regressor
+% subs regressor
 tic;
 for k = 1:traj_len
     disp(['point: ' num2str(k)]);
@@ -37,13 +39,15 @@ for k = 1:traj_len
     ddq4 = traj(k,16);
     ddq5 = traj(k,17);
     ddq6 = traj(k,18);
-    Pm( 6*(k-1)+1: 6*k , : ) = subs(Y_simp);  % stacked regressor
+    Pm( 6*(k-1)+1: 6*k , : ) = subs(Y_sym);  % stacked regressor
+    % Pm( 6*(k-1)+1: 6*k , : ) = Y_fun([q1 q2 q3 q4 q5 q6]', [dq1 dq2 dq3 dq4 ...
+    % dq5 dq6]', [ddq1 ddq2 ddq3 ddq4 ddq5 ddq6]');
     disp(['time to subs: ',num2str(toc)]);
 end
 
 disp(['time to eval Pm: ',num2str(toc)]);
 
-%% Pm SVD
+% Pm SVD
 
 [U, S, V] = svd(Pm,0);
 rho = rank(S)
@@ -75,7 +79,7 @@ end
 disp(['Identifiable parameters indexes: ' num2str(Xi.')]);
 disp(['Unidentifiable parameters indexes: ' num2str(Xni.')]);
 
-%% Pm_prime SVD
+% Pm_prime SVD
 
 [U, S, V] = svd(Pm_prime,0);
 rho = rank(S);
@@ -118,7 +122,7 @@ end
 
 A = -V21/V22;
 
-%% Construct the reduced parameter list
+% Construct the reduced parameter list
 
 %load regressor_completeparameters
 
@@ -158,7 +162,7 @@ theta_comb = theta(indX1)+A*theta(indX2);
 theta_reduced = [theta_id; theta_comb];
 
 
-%% Validate the numerical computation
+% Validate the numerical computation
 
 % Compute the torques from the reduced regressor and parameter vector
 for k=1:traj_len
@@ -178,7 +182,7 @@ else
 end
     
 
-%% Evaluate the symbolic reduced regressor and parameter vector
+% Evaluate the symbolic reduced regressor and parameter vector
 
 if reduce_ok
     
@@ -189,7 +193,7 @@ if reduce_ok
 
     % Construct the reduced numerical parameter vector
     theta_reduced = [theta_id; theta_comb];
-    regressor_red = Y_simp(:,[Xi; indX1]);
+    regressor_red = Y_sym(:,[Xi; indX1]);
     
     % Save the symbolic results
     save theta_reduced.mat theta_reduced

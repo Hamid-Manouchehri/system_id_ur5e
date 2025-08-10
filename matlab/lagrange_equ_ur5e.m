@@ -5,7 +5,7 @@ clear all
 % Kinetic energy and potential energy are calculated according to page 262
 % Siciliano textbook
 
-syms g q1 q2 q3 q4 q5 q6 dq1 dq2 dq3 dq4 dq5 dq6 ddq1 ddq2 ddq3 ddq4 ddq5 ddq6 ... % Joint State
+syms q1 q2 q3 q4 q5 q6 dq1 dq2 dq3 dq4 dq5 dq6 ddq1 ddq2 ddq3 ddq4 ddq5 ddq6 ... % Joint State
     m1 m2 m3 m4 m5 m6 ... % mi = m_li + m_m_i+1
     I_h1xx I_h1xy I_h1xz I_h1yy I_h1yz I_h1zz ... % Steiner Theorem : I_hixx = I_li + m_li*S(r_Ci,li)'*S(r_Ci,li) + m_i*(l_Ciy^2 + l_Ciz^2)
     I_h2xx I_h2xy I_h2xz I_h2yy I_h2yz I_h2zz ...
@@ -42,12 +42,12 @@ I_h5xy = 0; I_h5xz = 0;
 I_h6xy = 0; I_h6xz = 0; I_h6yz = 0;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-m1_rC1 = [m1_lC1x m1_lC1y m1_lC1z]';
-m2_rC2 = [m2_lC2x m2_lC2y m2_lC2z]';
-m3_rC3 = [m3_lC3x m3_lC3y m3_lC3z]';
-m4_rC4 = [m4_lC4x m4_lC4y m4_lC4z]';
-m5_rC5 = [m5_lC5x m5_lC5y m5_lC5z]';
-m6_rC6 = [m6_lC6x m6_lC6y m6_lC6z]';
+m1_rC1 = [0. -0.02561 0.00193]';
+m2_rC2 = [0.2125 0. 0.11336]';
+m3_rC3 = [0.15 0. 0.0265]';
+m4_rC4 = [0. -0.0018 0.01634]';
+m5_rC5 = [0. 0.0018 0.01634]';
+m6_rC6 = [0. 0. -0.001159]';
 
 I_1_h = [I_h1xx -I_h1xy -I_h1xz;
     -I_h1xy I_h1yy -I_h1yz;
@@ -292,7 +292,7 @@ disp('motion equation is calculated');
 save Eq_l Eq_l
 
 Y_simp = jacobian(Eq_l,p);
-save Y_simp Y_simp
+save Y_sym Y_sym
 save p p
 
 disp("saving Y_sym as a function...");
@@ -300,9 +300,12 @@ qSym   = sym('q',[6,1]);
 dqSym  = sym('dq',[6,1]);
 ddqSym = sym('ddq',[6,1]);
 matlabFunction(Y_simp, 'File','Y_fun','Vars',{qSym,dqSym,ddqSym});
-Y_fun = matlabFunction(Y_simp);
+Y_fun = matlabFunction(Y_sym);
 
-%%%%%%%%%%%%%% my addings %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+
 
 
 

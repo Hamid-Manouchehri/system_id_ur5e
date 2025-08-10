@@ -60,7 +60,7 @@ torques        = data(:,62:end); % get_joint_torques [τ₁, τ₂, τ₃, τ₄
 
 
 
-% plotJointPositions(time, qs);
+plotJointPositions(time, qs);
 % plotJointVelocities(time, qds);
 % plotTargetJointAccelerations(time, qdds);
 % plotTCPPose(time, tcpPose);

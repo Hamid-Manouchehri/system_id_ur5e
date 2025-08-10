@@ -29,7 +29,7 @@ with the software or the use or other dealings in the software.
 clc; clear; close all;
 
 folder   = '../data/traj/';
-filename = 'ur5e_smooth_random_joint_traj_v1.csv'; % any name you like, TODO
+filename = 'ur5e_smooth_random_joint_traj_v1_test.csv'; % any name you like, TODO
 
 T = 20;                % total duration, TODO
 Ns = 1000;

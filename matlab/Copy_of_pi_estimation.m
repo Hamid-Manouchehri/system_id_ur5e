@@ -48,7 +48,8 @@ actualTraj_csvFile_3 = fullfile(Joint_traj_dir, joint_traj_file_3);
 [hdr, t_1, actual_q_1, actual_qd_1, actualTarget_qdd_1, actualTau_1] = ...
     readUR5eLog(actualTraj_csvFile_1);
 Ybig_1 = stackRegressor(actual_q_1, actual_qd_1, actualTarget_qdd_1, Y_fun);
-pi_hat_1 = Ybig_1 \ actualTau_1;  % Estimated dynamic parameters
+% pi_hat_1 = Ybig_1 \ actualTau_1;  % Estimated dynamic parameters
+pi_hat_1 = pinv(Ybig_1) * actualTau_1;  % Estimated dynamic parameters
 
 % [theta_est2,resnorm,residual,exitflag,output,lambda] = lsqlin(Y_meas,taw_pure,[],[],[],[],lb,ub,[],[]);
 
@@ -57,14 +58,18 @@ subplot(4,1,1); plot(t_1, actual_q_1); ylabel("actual q_i");
 subplot(4,1,2); plot(t_1, actual_qd_1); ylabel("actual qd_i");
 subplot(4,1,3); plot(t_1, actualTarget_qdd_1); ylabel("actual target qdd_i");
 actualTau_rec_1 = reshape(actualTau_1, 6, []).';  % Reconstructed torque matrix
-subplot(4,1,4); plot(t_1, actualTau_rec_1); ylabel("actual \tau");
+% subplot(4,1,4); plot(t_1, actualTau_rec_1); ylabel("actual \tau");
 
+smoothActualTauMat_rec_1 = zeros(size(actualTau_rec_1, 1), size(actualTau_rec_1, 2));
 for i=1:6
-    smoothTauMat_rec_1(:,i) = smooth(actualTau_rec_1(:,i));
+    smoothActualTauMat_rec_1(:,i) = smooth(actualTau_rec_1(:,i));
 end
-subplot(4,1,4); plot(t_1, smoothTauMat_rec_1); ylabel("actual \tau");
+subplot(4,1,4); plot(t_1, smoothActualTauMat_rec_1); ylabel("actual \tau");
 
-
+tau_error_1 = actualTau_1 - (Ybig_1 * pi_hat_1);
+tau_error_rec_1 = reshape(tau_error_1, 6, []).';
+figure
+plot(t_1, tau_error_rec_1); ylabel("error \tau");
 
 
 
@@ -97,7 +102,7 @@ ext_tau  = reshape(actual_q_2, 6, []).';
 figure(3);
 for i = 1:6
     subplot(3,2,i); 
-    plot(real_tau(:,i),"r-."); ylabel("\tau_1"); 
+    plot(real_tau(:,i),"r-."); ylabel(sprintf('\\tau_{%d}', i)); 
     hold on;
     plot(ext_tau(:,i),"b-.");
 end

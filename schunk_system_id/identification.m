@@ -13,7 +13,8 @@ syms clmb_1 visc_1 clmb_2 visc_2 clmb_3 visc_3 clmb_4 visc_4 clmb_5 visc_5 clmb_
 theta_reduced = [theta_reduced ; [clmb_1 visc_1 clmb_2 visc_2 clmb_3 visc_3 clmb_4 visc_4 clmb_5 visc_5 clmb_6 visc_6]' ];
 
 %%
-load data\April_16_exciting_traj\measures_3.txt
+
+load('/home/hamid/projects/system_id_ur5e/schunk_system_id/data/April_16_exciting_traj/measures_3.txt')
 measures = measures_3;
 offset = 3/0.005;
 st = offset+1;
@@ -159,7 +160,7 @@ end
 for i=1:46+12
     disp([num2str(i) ' = ' char(theta_reduced(i)) ' = ' num2str(theta_est(i))])
 end
-break
+
 %%
 
 ub = 1*ones(33+12,1);
