@@ -28,6 +28,7 @@ with the software or the use or other dealings in the software.
 %}
 clc; clear; close all;
 
+% Saving:
 filename = 'ur5e_smooth_elbow_ninty_deg.csv'; % TODO: any name you like, TODO
 folder   = '../data/traj/';
 if ~exist(folder, 'dir')

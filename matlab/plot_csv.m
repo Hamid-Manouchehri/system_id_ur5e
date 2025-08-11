@@ -27,36 +27,39 @@ with the software or the use or other dealings in the software.
 *******************************************************************************
 %}
 
-clc; clear; %close all
+clc; clear; close all
 
-csv_file_name = 'ur5e_smooth_random_joint_traj_v2.csv';  % TODO, 10 is logging freq
-csv_dir = '/home/hamid/projects/system_id_ur5e/data/logs/';
+% Loading:
+loggedFileName = 'ur5e_smooth_random_joint_traj_v1.csv';  % TODO
+loggedDir = '/home/hamid/projects/system_id_ur5e/data/logs/';
+loggedFile = fullfile(loggedDir, loggedFileName);
+T = readtable(loggedFile);
+loggedData = table2array(T);  % Convert to array for easy indexing:
 
-fullfile = fullfile(csv_dir, csv_file_name);
+matFileName = 'ur5e_smooth_random_joint_traj_v1_analytical_workspace.mat';  % TODO
+matDir = '/home/hamid/projects/system_id_ur5e/data/mat/';
+matFile = fullfile(matDir, matFileName);
+analyticalWorkspace = load(matFile);
 
-% 2) Read into a table (handles headers automatically):
-T = readtable(fullfile);
-
-% 3) Convert to array for easy indexing:
-data = table2array(T);
-
-time           = data(:,1);      % timestamp in s
-qs             = data(:,2:7);    % actual_q, [q₁,…,q₆] in rad
-qds            = data(:,8:13);   % actual_qd, [q̇₁,…,q̇₆] in rad/s
-qdds           = data(:,14:19);  % target_qdd, [qdd1, qdd2, ..., qdd6] in rad/s^2
-tcpPose        = data(:,20:25);  % actual_TCP_pose, [x,y,z, Rx, Ry, Rz]
-tcpSpeed       = data(:,26:31);  % actual_TCP_speed, [vx, vy, vz, ωx, ωy, ωz]
-qActualCurrent = data(:,32:37);  % actual_current, [I1, I2, …, I6] in mA
-qOutputCurrent = data(:,38:43);  % joint_control_output, [I1, I2, …, I6] in mA
-tcpForce       = data(:,44:49);  % actual_TCP_force, [Fx, Fy, Fz, Tx, Ty, Tz]
-targetMoment   = data(:,50:55);  % target_moment, [T1, T2, ..., T6] in Nm
-qTemperature   = data(:,56:61); % joint_temperatures [t1, t2, ..., t6] in degrees Celsius
-torques        = data(:,62:end); % get_joint_torques [τ₁, τ₂, τ₃, τ₄, τ₅, τ₆] in Nm
+matFileName = 'ur5e_smooth_random_joint_traj_v1_matlabSim_workspace.mat';  % TODO
+matDir = '/home/hamid/projects/system_id_ur5e/data/mat/';
+matFile = fullfile(matDir, matFileName);
+matlabSimWorksapce = load(matFile);
 
 
 
-
-
+time           = loggedData(:,1);      % timestamp in s
+qs             = loggedData(:,2:7);    % actual_q, [q₁,…,q₆] in rad
+qds            = loggedData(:,8:13);   % actual_qd, [q̇₁,…,q̇₆] in rad/s
+qdds           = loggedData(:,14:19);  % target_qdd, [qdd1, qdd2, ..., qdd6] in rad/s^2
+tcpPose        = loggedData(:,20:25);  % actual_TCP_pose, [x,y,z, Rx, Ry, Rz]
+tcpSpeed       = loggedData(:,26:31);  % actual_TCP_speed, [vx, vy, vz, ωx, ωy, ωz]
+qActualCurrent = loggedData(:,32:37);  % actual_current, [I1, I2, …, I6] in mA
+qOutputCurrent = loggedData(:,38:43);  % joint_control_output, [I1, I2, …, I6] in mA
+tcpForce       = loggedData(:,44:49);  % actual_TCP_force, [Fx, Fy, Fz, Tx, Ty, Tz]
+targetMoment   = loggedData(:,50:55);  % target_moment, [T1, T2, ..., T6] in Nm
+qTemperature   = loggedData(:,56:61);  % joint_temperatures [t1, t2, ..., t6] in degrees Celsius
+torques        = loggedData(:,62:end); % get_joint_torques [τ₁, τ₂, τ₃, τ₄, τ₅, τ₆] in Nm
 
 
 
@@ -74,16 +77,46 @@ plotTargetMoment(time, targetMoment);
 
 
 
+figure(Name="analytical torque");
+for j = 1:6
+    subplot(3,2,j);
+    plot(analyticalWorkspace.tTraj, ...
+         analyticalWorkspace.analytical_tau(:,j),'LineWidth',1.2);
+    grid on;
+    title(sprintf('Joint %d Torque',j));
+    xlabel('Time [s]');
+    ylabel(sprintf('\\tau_{%d} [Nm]', j));
+end
+sgtitle('Analytical Joint Torques')
+
+
+figure(Name="matlab sim torque");
+for j = 1:6
+    subplot(3,2,j);
+    plot(matlabSimWorksapce.tTraj, ...
+         matlabSimWorksapce.tau(:,j),'LineWidth',1.2);
+    grid on;
+    title(sprintf('Joint %d Torque',j));
+    xlabel('Time [s]');
+    ylabel(sprintf('\\tau_{%d} [Nm]', j));
+end
+sgtitle('UR5e Matlab Sim Joint Torques')
 
 
 
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%% Function Definition %%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 function plotJointPositions(time, qs)
 % plotJointPositions(time, qs)
 %   time:     Nx1 time vector
 %   qs:       Nx6 joint positions [q1 q2 ... q6] in radians
 
-    figure;
+    figure(Name="actual q");
     hold on;
     for k = 1:6
         plot(time, qs(:,k), 'LineWidth',1.5);
@@ -100,7 +133,7 @@ end
 
 function plotJointVelocities(time, qds)
 % plotJointVelocities(time, qds)
-    figure;
+    figure(Name="actual qd");
     hold on;
     for k = 1:6
         plot(time, qds(:,k), 'LineWidth',1.5);
@@ -117,7 +150,7 @@ end
 
 function plotTargetJointAccelerations(time, qdds)
 % plotTargetJointAccelerations(time, qdds)
-    figure;
+    figure(Name="actual qdd");
     hold on;
     for k = 1:6
         plot(time, qdds(:,k), 'LineWidth',1.5);
@@ -135,9 +168,9 @@ end
 function plotTCPPose(time, tcpPose)
 % plotTCPPose(time, tcpPose)
 %   tcpPose: Nx6 [x y z Rx Ry Rz]
-
+    
+    figure(Name="actual TCP pose");
     labels = {'x(m)','y(m)','z(m)','Rx(rad)','Ry(rad)','Rz(rad)'};
-    figure;
     hold on;
     for k = 1:6
         plot(time, tcpPose(:,k), 'LineWidth',1.5);
@@ -155,8 +188,8 @@ function plotTCPSpeed(time, tcpSpeed)
 % plotTCPSpeed(time, tcpSpeed)
 %   tcpSpeed: Nx6 [vx vy vz wx wy wz]
 
+    figure(Name="actual TCP speed");
     labels = {'v_x(m/s)','v_y(m/s)','v_z(m/s)','ω_x(rad/s)','ω_y(rad/s)','ω_z(rad/s)'};
-    figure;
     hold on;
     for k = 1:6
         plot(time, tcpSpeed(:,k), 'LineWidth',1.5);
@@ -173,19 +206,19 @@ end
 function plotJointActualCurrents(time, qCurrent)
 % plotJointActualCurrents(time, qCurrent)
 %   qCurrent: Nx6 currents in mA
-
-    figure;
-    hold on;
-    for k = 1:6
-        plot(time, qCurrent(:,k), 'LineWidth',1.5);
+    
+    figure(Name="actual joint current");
+    for j = 1:6
+        subplot(3,2,j);
+        hold on;
+        plot(time, qCurrent(:,j), 'LineWidth',1.5);
+        grid on;
+        xlabel('Time (s)','FontSize',12); 
+        ylabel(sprintf('I_%d [mA]', j));
     end
-    hold off;
-    xlabel('Time (s)','FontSize',12);
-    ylabel('Joint Actual Currents (mA)','FontSize',12);
-    legend(arrayfun(@(k) sprintf('I_%d',k), 1:6, 'Uni',false),...
-           'Location','best');
-    grid on;
-    title('actual\_current','FontSize',14);
+    sgtitle('actual\_current');
+    
+
 end
 
 
@@ -193,7 +226,7 @@ function plotJointOutputCurrents(time, qCurrent)
 % plotJointOutputCurrents(time, qCurrent)
 %   qCurrent: Nx6 currents in mA
     
-    figure;
+    figure(Name="actual joint output current");
     for j = 1:6
         subplot(3,2,j);
         hold on;
@@ -211,8 +244,8 @@ function plotTCPForces(time, tcpForce)
 % plotTCPForces(time, tcpForce)
 %   tcpForce: Nx6 [Fx Fy Fz Tx Ty Tz]
 
+    figure(Name="actual TCP force");
     labels = {'F_x(N)','F_y(N)','F_z(N)','T_x(Nm)','T_y(Nm)','T_z(Nm)'};
-    figure;
     hold on;
     for k = 1:6
         plot(time, tcpForce(:,k), 'LineWidth',1.5);
@@ -228,7 +261,7 @@ end
 
 function plotTargetMoment(time, targetMoment)
 
-    figure;
+    figure(Name="actual target moment");
     for j = 1:6
         subplot(3,2,j);
         hold on;
@@ -239,14 +272,13 @@ function plotTargetMoment(time, targetMoment)
     end
     sgtitle('target\_moments');
 
-
 end
 
 function plotJointTemperatures(time, qTemp)
 %   tcpForce: Nx6 [temp1 temp2 temp3 temp4 temp5 temp6]
 
+    figure(Name="actual joint temp");
     labels = {'temp_1','temp_2','temp_3','temp_4','temp_5','temp_6'};
-    figure;
     hold on;
     for k = 1:6
         plot(time, qTemp(:,k), 'LineWidth',1.5);
@@ -274,7 +306,7 @@ function plotJointTorques(time, tau)
     [b,a] = butter(4, fc/(fs/2));     % 4th-order Butterworth
     tau_f = filtfilt(b,a,tau);   % zero-phase
     
-    figure;
+    figure(Name="actual torque");
     for j = 1:6
         subplot(3,2,j);
         plot(time, tau(:,j)); 

@@ -30,10 +30,19 @@ with the software or the use or other dealings in the software.
 %}
 clc; clear; close all;
 
-trajFile = 'ur5e_smooth_random_joint_traj_v2.csv';
+% Loading:
+trajFile = 'ur5e_smooth_random_joint_traj_v1.csv';
 trajDir  = '../data/traj';
 csvTraj = fullfile(trajDir, trajFile);
 [hdr, tTraj, qTraj] = readCSVFile(csvTraj);
+
+% Saving:
+workspaceFile = 'ur5e_smooth_random_joint_traj_v1_matlabSim_workspace_test.mat';  % TODO
+workspaceDir  = '../data/mat';
+matlabSimWorksapce = fullfile(workspaceDir, workspaceFile);
+
+
+
 
 ur5e_model = loadrobot("universalUR5e");
 ur5e_model.DataFormat = 'row';
@@ -95,13 +104,8 @@ for i = 1:length(tTraj)
     tau(i,:) = inverseDynamics(ur5e_model, q, qd, qdd);
 end
 
-% figure;
-% plot(tTraj, qTraj)
-% plot(tTraj, qdTraj)
-% plot(tTraj, qddTraj)
-
 % Plot joint torques
-figure(1);
+figure(Name="matlab sim torque");
 for j = 1:6
     subplot(3,2,j);
     plot(tTraj, tau(:,j),'LineWidth',1.2);
@@ -113,14 +117,14 @@ end
 sgtitle('UR5e Matlab Sim Joint Torques')
 
 % Visual animation of UR5e trajectory:
-figure(2);
-for k = 1:5:length(tTraj)
-    show(ur5e_model, qTraj(k,:), 'PreservePlot',false,'Frames','off');
-    title(sprintf('UR5e Simulation (t=%.2fs)', tTraj(k)));
-    drawnow;
-end
+% figure(Name="UR5e animation");
+% for k = 1:5:length(tTraj)
+%     show(ur5e_model, qTraj(k,:), 'PreservePlot',false,'Frames','off');
+%     title(sprintf('UR5e Simulation (t=%.2fs)', tTraj(k)));
+%     drawnow;
+% end
 
-
+save(matlabSimWorksapce)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%% Function Definition %%%%%%%%%%%%%%%%%%%%%%%%%%%
